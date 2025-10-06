@@ -1,0 +1,16 @@
+{
+  "namespace": "com.lens.events",
+  "type": "record",
+  "name": "ABTestEvent",
+  "fields": [
+    {"name": "eventId", "type": "string", "doc": "Unique identifier for the event"},
+    {"name": "timestamp", "type": "long", "doc": "Unix timestamp in milliseconds"},
+    {"name": "experimentId", "type": "string", "doc": "ID of the A/B test experiment"},
+    {"name": "userId", "type": "string", "doc": "User participating in the test"},
+    {"name": "variant", "type": "string", "doc": "Test variant assigned (e.g., 'control', 'treatment')"},
+    {"name": "eventType", "type": {"type": "enum", "name": "ABEventType", "symbols": ["assignment", "conversion", "engagement", "metric"]}, "doc": "Type of A/B test event"},
+    {"name": "metricName", "type": ["null", "string"], "default": null, "doc": "Name of the metric being tracked"},
+    {"name": "metricValue", "type": ["null", "float"], "default": null, "doc": "Value of the metric"},
+    {"name": "metadata", "type": ["null", {"type": "map", "values": "string"}], "default": null, "doc": "Additional metadata"}
+  ]
+}

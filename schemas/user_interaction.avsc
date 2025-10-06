@@ -1,0 +1,18 @@
+{
+  "namespace": "com.lens.events",
+  "type": "record",
+  "name": "UserInteraction",
+  "fields": [
+    {"name": "eventId", "type": "string", "doc": "Unique identifier for the event"},
+    {"name": "timestamp", "type": "long", "doc": "Unix timestamp in milliseconds"},
+    {"name": "userId", "type": "string", "doc": "Unique identifier for the user"},
+    {"name": "sessionId", "type": "string", "doc": "Session identifier"},
+    {"name": "interactionType", "type": {"type": "enum", "name": "InteractionType", "symbols": ["view", "click", "rating", "purchase", "search", "bookmark"]}, "doc": "Type of user interaction"},
+    {"name": "itemId", "type": "string", "doc": "ID of the item being interacted with"},
+    {"name": "itemCategory", "type": ["null", "string"], "default": null, "doc": "Category of the item"},
+    {"name": "duration", "type": ["null", "int"], "default": null, "doc": "Duration of interaction in seconds"},
+    {"name": "rating", "type": ["null", "float"], "default": null, "doc": "Rating given by user (1-5)"},
+    {"name": "searchQuery", "type": ["null", "string"], "default": null, "doc": "Search query if interaction is search"},
+    {"name": "metadata", "type": ["null", {"type": "map", "values": "string"}], "default": null, "doc": "Additional metadata"}
+  ]
+}

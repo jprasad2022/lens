@@ -1,0 +1,18 @@
+{
+  "namespace": "com.lens.events",
+  "type": "record",
+  "name": "RecommendationRequest",
+  "fields": [
+    {"name": "requestId", "type": "string", "doc": "Unique identifier for the request"},
+    {"name": "timestamp", "type": "long", "doc": "Unix timestamp in milliseconds"},
+    {"name": "userId", "type": "string", "doc": "User requesting recommendations"},
+    {"name": "modelName", "type": "string", "doc": "Name of the model to use"},
+    {"name": "numRecommendations", "type": "int", "default": 10, "doc": "Number of recommendations requested"},
+    {"name": "context", "type": ["null", {"type": "map", "values": "string"}], "default": null, "doc": "Context for recommendations"},
+    {"name": "filters", "type": ["null", {"type": "array", "items": {"type": "record", "name": "Filter", "fields": [
+      {"name": "field", "type": "string"},
+      {"name": "operator", "type": {"type": "enum", "name": "FilterOperator", "symbols": ["eq", "ne", "gt", "lt", "in", "contains"]}},
+      {"name": "value", "type": "string"}
+    ]}}], "default": null, "doc": "Filters to apply"}
+  ]
+}

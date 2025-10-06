@@ -1,0 +1,25 @@
+{
+  "compatibility": "BACKWARD",
+  "subjects": {
+    "user-interactions-value": {
+      "schema": "user_interaction.avsc",
+      "compatibility": "BACKWARD"
+    },
+    "recommendation-requests-value": {
+      "schema": "recommendation_request.avsc",
+      "compatibility": "BACKWARD"
+    },
+    "recommendation-responses-value": {
+      "schema": "recommendation_response.avsc",
+      "compatibility": "BACKWARD"
+    },
+    "model-metrics-value": {
+      "schema": "model_metrics.avsc",
+      "compatibility": "BACKWARD"
+    },
+    "ab-test-events-value": {
+      "schema": "ab_test_event.avsc",
+      "compatibility": "BACKWARD"
+    }
+  }
+}

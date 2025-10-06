@@ -1,0 +1,16 @@
+{
+  "namespace": "com.lens.events",
+  "type": "record",
+  "name": "ModelMetrics",
+  "fields": [
+    {"name": "metricId", "type": "string", "doc": "Unique identifier for the metric event"},
+    {"name": "timestamp", "type": "long", "doc": "Unix timestamp in milliseconds"},
+    {"name": "modelName", "type": "string", "doc": "Name of the model"},
+    {"name": "modelVersion", "type": "string", "doc": "Version of the model"},
+    {"name": "metricType", "type": {"type": "enum", "name": "MetricType", "symbols": ["accuracy", "precision", "recall", "f1_score", "auc", "latency", "throughput", "error_rate"]}, "doc": "Type of metric"},
+    {"name": "value", "type": "float", "doc": "Metric value"},
+    {"name": "windowStart", "type": "long", "doc": "Start of measurement window"},
+    {"name": "windowEnd", "type": "long", "doc": "End of measurement window"},
+    {"name": "tags", "type": ["null", {"type": "map", "values": "string"}], "default": null, "doc": "Additional tags"}
+  ]
+}

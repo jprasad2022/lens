@@ -1,0 +1,21 @@
+{
+  "namespace": "com.lens.events",
+  "type": "record",
+  "name": "RecommendationResponse",
+  "fields": [
+    {"name": "requestId", "type": "string", "doc": "Original request ID"},
+    {"name": "timestamp", "type": "long", "doc": "Unix timestamp in milliseconds"},
+    {"name": "userId", "type": "string", "doc": "User who requested recommendations"},
+    {"name": "modelName", "type": "string", "doc": "Model used for recommendations"},
+    {"name": "modelVersion", "type": "string", "doc": "Version of the model"},
+    {"name": "recommendations", "type": {"type": "array", "items": {"type": "record", "name": "Recommendation", "fields": [
+      {"name": "itemId", "type": "string"},
+      {"name": "score", "type": "float"},
+      {"name": "rank", "type": "int"},
+      {"name": "explanation", "type": ["null", "string"], "default": null}
+    ]}}, "doc": "List of recommendations"},
+    {"name": "processingTime", "type": "long", "doc": "Processing time in milliseconds"},
+    {"name": "status", "type": {"type": "enum", "name": "ResponseStatus", "symbols": ["success", "partial", "error"]}, "doc": "Status of the response"},
+    {"name": "errorMessage", "type": ["null", "string"], "default": null, "doc": "Error message if status is error"}
+  ]
+}
