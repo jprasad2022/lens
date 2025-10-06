@@ -72,3 +72,9 @@ logs/
 *.tmp
 *.temp
 .cache/
+
+# Windows accidental files
+nul
+nul.txt
+NUL
+*.nul
