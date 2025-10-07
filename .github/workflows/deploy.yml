@@ -65,18 +65,25 @@ jobs:
       contents: read
       id-token: write
     
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    
     steps:
     - name: Google Auth
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
     
+    - name: Debug outputs
+      run: |
+        echo "Backend image: ${{ needs.build-and-push.outputs.backend-image }}"
+    
     - name: Deploy to Cloud Run
       id: deploy
       uses: google-github-actions/deploy-cloudrun@v1
       with:
         service: ${{ env.SERVICE }}
-        image: ${{ needs.build-and-push.outputs.backend-image }}
+        image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/backend:${{ github.sha }}
         region: ${{ env.REGION }}
         env_vars: |
           KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}

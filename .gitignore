@@ -78,3 +78,6 @@ nul
 nul.txt
 NUL
 *.nul
+
+# Documentation folder
+docs/
