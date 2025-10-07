@@ -94,6 +94,7 @@ jobs:
           MODEL_REGISTRY_PATH=/app/model_registry
           ENABLE_METRICS=true
         flags: |
+          --port=8000
           --cpu=2
           --memory=2Gi
           --min-instances=1
