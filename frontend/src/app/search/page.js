@@ -1,12 +1,12 @@
-
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMovie } from '@/hooks/useMovie';
 import SearchResults from '@/components/search/SearchResults';
 import { useEffect } from 'react';
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
   const { movies, loading, error, searchMovies } = useMovie();
@@ -24,5 +24,17 @@ export default function SearchPage() {
       {error && <p className="text-red-500">Error: {error.message}</p>}
       <SearchResults movies={movies} />
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4">Loading search...</h1>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }
