@@ -8,8 +8,8 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_LOCATION: us-central1
-  REPOSITORY: movielens
-  SERVICE: movielens-api
+  REPOSITORY: lens
+  SERVICE: lens-api
   REGION: us-central1
 
 jobs:
