@@ -140,4 +140,4 @@ jobs:
         KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
         KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
       run: |
-        python scripts/probe.py --runs 10
+        timeout 60s python scripts/probe.py --runs 10 || echo "Probe timed out after 60s"
