@@ -53,7 +53,7 @@ jobs:
       id: frontend-image
       run: |
         IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/frontend:${{ github.sha }}"
-        docker build -t $IMAGE ./frontend
+        docker build -f ./frontend/Dockerfile.simple -t $IMAGE ./frontend
         docker push $IMAGE
         echo "image=$IMAGE" >> $GITHUB_OUTPUT
         echo "Frontend image: $IMAGE" >> $GITHUB_STEP_SUMMARY

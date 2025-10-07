@@ -1,0 +1,25 @@
+# Simpler Dockerfile for debugging
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Set environment variables
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Build the application
+RUN npm run build
+
+# Start the application
+EXPOSE 3000
+ENV PORT=3000
+
+CMD ["npm", "start"]
