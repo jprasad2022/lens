@@ -132,12 +132,6 @@ if settings.rate_limit_enabled:
 if settings.enable_metrics:
     app.add_middleware(PrometheusMiddleware)
 
-# Root health check endpoint (no authentication, no rate limiting)
-@app.get("/healthz")
-async def healthz():
-    """Simple health check endpoint for monitoring"""
-    return {"status": "healthy", "service": settings.app_name}
-
 # Include routers
 app.include_router(
     recommendation_router.router,
