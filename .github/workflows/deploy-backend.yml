@@ -1,9 +1,13 @@
-name: Build and Deploy
+name: Deploy Backend
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+      - 'scripts/**'
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -110,7 +114,7 @@ jobs:
     - name: Run Smoke Test
       run: |
         sleep 10  # Wait for service to be ready
-        curl -f "${{ steps.deploy.outputs.url }}/health" || exit 1
+        curl -f "${{ steps.deploy.outputs.url }}/healthz" || exit 1
         echo "Health check passed ✅" >> $GITHUB_STEP_SUMMARY
 
   run-probes:
