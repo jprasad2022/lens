@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False)
     api_prefix: str = ""
     allowed_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8000"]
+        default=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8000", "https://lens-smoky-six.vercel.app"]
     )
     
     # Server Configuration

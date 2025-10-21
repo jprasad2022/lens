@@ -166,10 +166,12 @@ All events are validated against JSON schemas before storage.
 
 ## 4. Cloud Deployment
 
-### Live API
-- **URL**: https://lens-backend-{team_prefix}.up.railway.app
-- **Health Check**: https://lens-backend-{team_prefix}.up.railway.app/healthz
-- **API Documentation**: https://lens-backend-{team_prefix}.up.railway.app/docs
+### Live Deployment
+- **Frontend URL**: https://lens-smoky-six.vercel.app/
+- **Backend API**: https://lens-api-940371601491.us-central1.run.app
+- **Health Check**: https://lens-api-940371601491.us-central1.run.app/healthz
+- **API Documentation**: https://lens-api-940371601491.us-central1.run.app/docs
+- **Backend Region**: us-central1 (Google Cloud Run)
 
 ### Docker Configuration
 ```dockerfile
