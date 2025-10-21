@@ -42,7 +42,7 @@ def get_model_stats():
 
 def get_kafka_topics():
     """Get Kafka topics from environment or use defaults."""
-    team_prefix = os.getenv("TEAM_PREFIX", "team1")
+    team_prefix = os.getenv("TEAM_PREFIX", "group1")
     kafka_enabled = os.getenv("KAFKA_ENABLED", "true").lower() == "true"
     
     if kafka_enabled:
@@ -60,13 +60,13 @@ def get_kafka_topics():
 def generate_markdown_report():
     """Generate Milestone 2 report in Markdown format."""
     
-    team_prefix = os.getenv("TEAM_PREFIX", "team1")
+    team_prefix = os.getenv("TEAM_PREFIX", "group1")
     model_stats = get_model_stats()
     kafka_info = get_kafka_topics()
     
     report = f"""# Milestone 2: Kafka Wiring, Baselines & First Cloud Deploy
 
-**Team**: {team_prefix}  
+**Team**: Group 1  
 **Date**: {datetime.now().strftime("%Y-%m-%d")}
 
 ## 1. Kafka Verification
@@ -162,7 +162,7 @@ All events are validated against JSON schemas before storage.
 - Model Comparison: `backend/scripts/compare_models.py`
 - ALS Training: `backend/scripts/train_als_model.py`
 - Model Fix Script: `backend/scripts/fix_models.py`
-- Repository: https://github.com/{team_prefix}/lens
+- Repository: https://github.com/Group-1-LENS/lens
 
 ## 4. Cloud Deployment
 
@@ -200,10 +200,10 @@ CMD ["python", "run.py"]
 ```
 
 ### Registry Image
-- **Registry**: Docker Hub
-- **Image**: `{team_prefix}/lens-backend:latest`
-- **Pull Command**: `docker pull {team_prefix}/lens-backend:latest`
-- **Build Command**: `docker build -t {team_prefix}/lens-backend:latest ./backend`
+- **Registry**: Docker Hub / Google Container Registry
+- **Image**: `gcr.io/lens-474418/lens-api:latest`
+- **Pull Command**: `docker pull gcr.io/lens-474418/lens-api:latest`
+- **Build Command**: `docker build -t gcr.io/lens-474418/lens-api:latest ./backend`
 
 ### Secrets Configuration
 - Kafka credentials stored in GitHub Secrets / Cloud Run environment

@@ -21,6 +21,17 @@ class Settings(BaseSettings):
         default=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8000", "https://lens-smoky-six.vercel.app"]
     )
     
+    @validator("allowed_origins", pre=True)
+    def parse_allowed_origins(cls, v):
+        if isinstance(v, str):
+            # If it's a string (from env var), parse it as JSON
+            import json
+            try:
+                return json.loads(v)
+            except:
+                return v.split(",")  # Fallback to comma-separated
+        return v
+    
     # Server Configuration
     host: str = Field(default="0.0.0.0")
     port: int = Field(default=8000)

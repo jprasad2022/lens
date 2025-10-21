@@ -7,21 +7,21 @@
 
 ### Topics Created
 The following Kafka topics have been created:
-- `team1.watch` - User watch events
-- `team1.rate` - User rating events  
-- `team1.reco_requests` - Recommendation requests
-- `team1.reco_responses` - Recommendation responses
+- `group1.watch` - User watch events
+- `group1.rate` - User rating events  
+- `group1.reco_requests` - Recommendation requests
+- `group1.reco_responses` - Recommendation responses
 
 ### Topic Verification (kcat output)
 ```bash
 # List topics
-kcat -L -b $KAFKA_BOOTSTRAP_SERVERS | grep team1
+kcat -L -b $KAFKA_BOOTSTRAP_SERVERS | grep group1
 
 # Output:
-team1.watch (3 partitions, rf=3)
-team1.rate (3 partitions, rf=3)
-team1.reco_requests (3 partitions, rf=3)
-team1.reco_responses (3 partitions, rf=3)
+group1.watch (3 partitions, rf=3)
+group1.rate (3 partitions, rf=3)
+group1.reco_requests (3 partitions, rf=3)
+group1.reco_responses (3 partitions, rf=3)
 ```
 
 ### Consumer Configuration
@@ -32,7 +32,7 @@ kafka_config = {
     "sasl.mechanisms": "PLAIN",
     "sasl.username": os.getenv("KAFKA_API_KEY"),
     "sasl.password": os.getenv("KAFKA_API_SECRET"),
-    "group.id": "team1-ingestor",
+    "group.id": "group1-ingestor",
     "auto.offset.reset": "earliest",
 }
 ```
@@ -42,13 +42,13 @@ kafka_config = {
 ### Storage Configuration
 - **Storage Type**: Google Cloud Storage / Local
 - **Bucket**: `lens-data-940371601491`
-- **Path Pattern**: `team1/events/{event_type}/{timestamp}_{count}_events.parquet`
+- **Path Pattern**: `group1/events/{event_type}/{timestamp}_{count}_events.parquet`
 - **Data Format**: Parquet files with schema validation
 - **Retention**: 30 days for event data, indefinite for model artifacts
 
 ### Snapshot Structure
 ```
-team1/events/
+group1/events/
 ├── watch/
 │   ├── 20241020_120000_1000_events.parquet
 │   └── 20241020_130000_1000_events.parquet
@@ -96,7 +96,7 @@ All events are validated against JSON schemas before storage.
 - Model Comparison: `backend/scripts/compare_models.py`
 - ALS Training: `backend/scripts/train_als_model.py`
 - Model Fix Script: `backend/scripts/fix_models.py`
-- Repository: https://github.com/team1/lens
+- Repository: https://github.com/Group-1-LENS/lens
 
 ## 4. Cloud Deployment
 
@@ -134,10 +134,10 @@ CMD ["python", "run.py"]
 ```
 
 ### Registry Image
-- **Registry**: Docker Hub
-- **Image**: `team1/lens-backend:latest`
-- **Pull Command**: `docker pull team1/lens-backend:latest`
-- **Build Command**: `docker build -t team1/lens-backend:latest ./backend`
+- **Registry**: Docker Hub / Google Container Registry
+- **Image**: `gcr.io/lens-474418/lens-api:latest`
+- **Pull Command**: `docker pull gcr.io/lens-474418/lens-api:latest`
+- **Build Command**: `docker build -t gcr.io/lens-474418/lens-api:latest ./backend`
 
 ### Secrets Configuration
 - Kafka credentials stored in GitHub Secrets / Cloud Run environment
@@ -173,8 +173,8 @@ P99 latency: 287.3ms
 ```
 
 ### Kafka Events Generated
-- `team1.reco_requests`: 480 events
-- `team1.reco_responses`: 480 events
+- `group1.reco_requests`: 480 events
+- `group1.reco_responses`: 480 events
 
 ## Reproducibility Notes
 
@@ -201,8 +201,8 @@ P99 latency: 287.3ms
    docker-compose up -d
    
    # Deploy to cloud
-   docker build -t team1/lens-backend:latest ./backend
-   docker push team1/lens-backend:latest
+   docker build -t group1/lens-backend:latest ./backend
+   docker push group1/lens-backend:latest
    ```
 
 4. **Run Probes**:
