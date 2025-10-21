@@ -4,7 +4,15 @@
       "Bash(ls:*)",
       "Bash(rm:*)",
       "Bash(npm run dev:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(docker-compose stop:*)",
+      "Bash(curl:*)",
+      "Bash(docker cp:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

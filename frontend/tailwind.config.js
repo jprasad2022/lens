@@ -32,9 +32,45 @@ module.exports = {
           800: '#075985',
           900: '#0c4a6e',
         },
+        movie: {
+          gold: '#ffd700',
+          red: '#dc2626',
+          dark: '#0f0f0f',
+          card: '#1a1a1a',
+        },
+        accent: {
+          orange: '#ff6b35',
+          purple: '#9333ea',
+          green: '#10b981',
+        },
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'slide-up': 'slide-up 0.5s ease-out',
+        'fade-in': 'fade-in 0.5s ease-out',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'slide-up': {
+          from: { opacity: '0', transform: 'translateY(20px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
+        'glow-lg': '0 0 40px rgba(59, 130, 246, 0.5)',
       },
     },
   },

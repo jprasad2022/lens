@@ -28,6 +28,7 @@ RUN useradd -m -u 1000 appuser
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from builder
@@ -54,4 +55,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Start command
-CMD ["python", "run_debug.py"]
+CMD ["python", "run.py"]

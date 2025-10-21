@@ -40,32 +40,39 @@ async def lifespan(app: FastAPI):
     startup_start = time.time()
     
     # Initialize services
-    print("🚀 Starting MovieLens Recommender API...")
+    print("Starting MovieLens Recommender API...")
+    
+    # Download data from GCS if needed
+    try:
+        from utils.download_data import download_movielens_data
+        download_movielens_data()
+    except Exception as e:
+        print(f"Warning: Could not download data: {e}")
     
     try:
         # Initialize model service
-        print("📊 Initializing model service...")
+        print("Initializing model service...")
         app_state.model_service = ModelService()
         await app_state.model_service.initialize()
         
         # Initialize movie metadata service
-        print("🎬 Initializing movie metadata service...")
+        print("Initializing movie metadata service...")
         app_state.movie_metadata_service = MovieMetadataService()
         await app_state.movie_metadata_service.initialize()
         
         # Initialize rating statistics service
-        print("📊 Initializing rating statistics service...")
+        print("Initializing rating statistics service...")
         app_state.rating_statistics_service = RatingStatisticsService()
         await app_state.rating_statistics_service.initialize()
         
         # Initialize user demographics service
-        print("👥 Initializing user demographics service...")
+        print("Initializing user demographics service...")
         app_state.user_demographics_service = UserDemographicsService()
         await app_state.user_demographics_service.initialize()
         
         # Initialize Kafka if enabled
         if settings.kafka_bootstrap_servers != "localhost:9092":
-            print("📨 Initializing Kafka service...")
+            print("Initializing Kafka service...")
             app_state.kafka_service = KafkaService()
             await app_state.kafka_service.initialize()
             
@@ -75,20 +82,20 @@ async def lifespan(app: FastAPI):
             )
         
         # Load default model
-        print(f"🤖 Loading default model: {settings.default_model}")
+        print(f"Loading default model: {settings.default_model}")
         await app_state.model_service.load_model(settings.default_model)
         
         startup_time = time.time() - startup_start
-        print(f"✅ Application started in {startup_time:.2f}s")
+        print(f"Application started in {startup_time:.2f}s")
         
     except Exception as e:
-        print(f"❌ Startup failed: {str(e)}")
+        print(f"Startup failed: {str(e)}")
         raise
     
     yield
     
     # Shutdown
-    print("🔄 Shutting down...")
+    print("Shutting down...")
     
     # Cancel consumer task
     if hasattr(app_state, 'consumer_task') and app_state.consumer_task:
@@ -105,15 +112,15 @@ async def lifespan(app: FastAPI):
     if app_state.model_service:
         await app_state.model_service.cleanup()
     
-    print("👋 Shutdown complete")
+    print("Shutdown complete")
 
 # Create FastAPI app
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     lifespan=lifespan,
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    docs_url="/docs",  # Always enable docs for debugging
+    redoc_url="/redoc",  # Always enable redoc for debugging
 )
 
 # Add CORS middleware

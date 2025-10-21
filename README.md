@@ -14,19 +14,24 @@ lens/
 │   ├── app/          # Main application code
 │   ├── services/     # Business logic services
 │   ├── routers/      # API endpoints
+│   ├── scripts/      # Backend utility scripts
 │   ├── requirements.txt
 │   └── README.md     # Backend documentation
-├── infra/            # Infrastructure as code
-│   ├── docker-compose.yml
-│   ├── k8s/          # Kubernetes manifests
-│   └── terraform/    # Cloud infrastructure
-├── scripts/          # Utility scripts
-│   ├── setup.sh      # Initial setup script
-│   └── deploy.sh     # Deployment script
-└── docs/             # Additional documentation
-    ├── architecture.md
-    ├── api.md
-    └── deployment.md
+├── schemas/          # Kafka event schemas (Avro)
+│   ├── *.avsc        # Schema definitions
+│   └── register_schemas.py
+├── scripts/          # Project-level utility scripts
+│   ├── probe.py      # API health probe
+│   ├── fix-github-permissions.sh
+│   └── grant-bucket-access.sh
+├── docs/             # Additional documentation
+│   ├── architecture-diagram.md
+│   ├── architecture-rationale.md
+│   ├── api-slos.md
+│   ├── testing-guide.md
+│   └── technical-proposal.md
+├── docker-compose.yml      # Full stack deployment
+└── docker-compose-minimal.yml  # Minimal deployment
 ```
 
 ## Architecture Overview
@@ -73,7 +78,8 @@ lens/
    python -m venv venv
    source venv/bin/activate  # Windows: venv\Scripts\activate
    pip install -r requirements.txt
-   cp .env.example .env
+   python scripts/download_movielens.py  # Download dataset
+   python scripts/train_simple_models.py  # Train initial models
    uvicorn app.main:app --reload
    ```
 
@@ -81,7 +87,6 @@ lens/
    ```bash
    cd frontend
    npm install
-   cp .env.example .env.local
    npm run dev
    ```
 
@@ -93,8 +98,32 @@ lens/
 ### Docker Deployment
 
 ```bash
+# Start all services
 docker-compose up -d
+
+# Register Kafka schemas
+cd schemas
+python register_schemas.py
+
+# Verify all services are running
+python test_integration.py
 ```
+
+### Service Access Points
+
+Once all services are running, you can access:
+
+| Service | URL | Description | Credentials |
+|---------|-----|-------------|-------------|
+| Frontend | http://localhost:3000 | Main web application | None |
+| Backend API | http://localhost:8000 | REST API endpoints | None |
+| API Documentation | http://localhost:8000/docs | Interactive API docs (Swagger) | None |
+| Kafka UI | http://localhost:8080 | Monitor Kafka topics and messages | None |
+| Schema Registry | http://localhost:8081 | Manage Avro schemas | None |
+| Prometheus | http://localhost:9090 | Metrics collection | None |
+| Grafana | http://localhost:3001 | Metrics visualization dashboards | Username: `admin`<br>Password: `admin` |
+
+**Note:** On first login to Grafana, you may be prompted to change the default password. You can skip this for local development.
 
 ## Key Features
 

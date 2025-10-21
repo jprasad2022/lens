@@ -30,23 +30,38 @@ backend/
 │   ├── model_router.py
 │   └── monitoring_router.py
 ├── services/
-│   ├── model_service.py        # ML model management
-│   ├── kafka_service.py        # Kafka producer/consumer
-│   ├── recommendation_service.py
-│   └── cache_service.py        # Redis caching
+│   ├── auth_service.py              # Authentication service
+│   ├── cache_service.py             # Redis caching
+│   ├── kafka_service.py             # Kafka producer/consumer
+│   ├── model_service.py             # ML model management
+│   ├── movie_metadata_service.py    # Movie metadata handling
+│   ├── rating_statistics_service.py # Rating statistics
+│   ├── recommendation_service.py    # Recommendation logic
+│   └── user_demographics_service.py # User demographics
 ├── recommender/
-│   ├── models.py              # ML model implementations
-│   ├── training.py            # Model training pipeline
-│   └── evaluation.py          # Model evaluation
+│   └── models.py         # ML model implementations
 ├── stream/
-│   ├── consumer.py            # Kafka consumer
-│   └── producer.py            # Kafka producer
+│   └── consumer.py       # Kafka consumer
 ├── scripts/
-│   ├── train_models.py        # Training script
-│   ├── probe.py              # API prober
-│   └── download_movielens.py  # Data download
-└── tests/
-    └── test_*.py             # Test files
+│   ├── download_movielens.py    # Data download
+│   ├── train_initial_models.py  # Initial model training
+│   └── train_simple_models.py   # Simple model training
+├── utils/
+│   ├── __init__.py
+│   └── download_data.py  # Data download utilities
+├── tests/
+│   ├── __init__.py
+│   ├── test_api.py       # API tests
+│   ├── test_models.py    # Model tests
+│   └── test_services.py  # Service tests
+├── data/                 # MovieLens dataset
+├── model_registry/       # Trained models storage
+├── Dockerfile
+├── README.md
+├── requirements.txt
+├── pyproject.toml
+├── pytest.ini
+└── run.py               # Application runner
 ```
 
 ## API Endpoints
@@ -98,7 +113,7 @@ cp .env.example .env
 ### 4. Train Initial Models
 
 ```bash
-python scripts/train_models.py --models popularity collaborative als
+python scripts/train_simple_models.py
 ```
 
 ### 5. Run Development Server
@@ -154,7 +169,7 @@ KAFKA_API_SECRET=your-api-secret
 ### Manual Training
 
 ```bash
-python scripts/train_models.py --model als --params '{"factors": 100, "iterations": 20}'
+python scripts/train_simple_models.py
 ```
 
 ### Scheduled Retraining

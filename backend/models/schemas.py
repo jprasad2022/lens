@@ -6,6 +6,10 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field, validator
 
+# Configure Pydantic to allow model_ prefixed fields
+class BaseModelWithConfig(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
 # Request Models
 class RecommendationRequest(BaseModel):
     """Recommendation request parameters"""
@@ -13,7 +17,7 @@ class RecommendationRequest(BaseModel):
     model: Optional[str] = Field(default=None, description="Model name to use")
     features: Optional[Dict[str, Any]] = Field(default=None, description="Additional features")
 
-class FeedbackRequest(BaseModel):
+class FeedbackRequest(BaseModelWithConfig):
     """User feedback on recommendations"""
     user_id: str = Field(..., description="User ID")
     movie_id: int = Field(..., description="Movie ID")
@@ -85,7 +89,7 @@ class MetricsResponse(BaseModel):
     timestamp: datetime
     metrics: Dict[str, Any]
 
-class ABTestResult(BaseModel):
+class ABTestResult(BaseModelWithConfig):
     """A/B test result"""
     model_a: str
     model_b: str
@@ -122,7 +126,7 @@ class RecoRequestEvent(BaseModel):
     model: str = Field(..., description="Model used")
     k: int = Field(..., description="Number of recommendations requested")
 
-class RecoResponseEvent(BaseModel):
+class RecoResponseEvent(BaseModelWithConfig):
     """Recommendation response event"""
     ts: int = Field(..., description="Timestamp in milliseconds")
     user_id: int = Field(..., description="User ID")

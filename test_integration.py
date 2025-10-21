@@ -65,15 +65,15 @@ def main():
     print("\nTesting Backend API Endpoints:")
     try:
         # Test recommendation endpoint
-        test_data = {
-            "user_id": "test_user_123",
-            "model_name": "collaborative_filtering",
-            "num_recommendations": 5
+        user_id = 123
+        params = {
+            "k": 5,
+            "model": "als"
         }
         
-        response = requests.post(
-            "http://localhost:8000/api/v1/recommendations/predict",
-            json=test_data,
+        response = requests.get(
+            f"http://localhost:8000/recommend/{user_id}",
+            params=params,
             timeout=10
         )
         
@@ -82,7 +82,7 @@ def main():
         
         if api_test_passed:
             data = response.json()
-            print(f"  → Received {len(data.get('recommendations', []))} recommendations")
+            print(f"  → Received {len(data.get('movies', []))} recommendations")
     except Exception as e:
         print(f"✗ Recommendation endpoint: {e}")
         api_test_passed = False

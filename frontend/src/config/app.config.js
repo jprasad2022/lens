@@ -20,7 +20,7 @@ export const appConfig = {
       
       // Model management
       models: '/models',
-      switchModel: '/switch',
+      switchModel: '/models/switch',
       
       // User endpoints
       userHistory: '/users/{userId}/history',
@@ -45,7 +45,7 @@ export const appConfig = {
   // Model Configuration
   models: {
     default: process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'popularity',
-    available: ['popularity', 'collaborative', 'als', 'neural'],
+    available: ['popularity', 'collaborative', 'als'],
     recommendationCount: parseInt(process.env.NEXT_PUBLIC_RECOMMENDATION_COUNT || '20'),
   },
   

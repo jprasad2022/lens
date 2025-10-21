@@ -19,14 +19,35 @@ This frontend follows a modern, modular architecture with:
 src/
 ├── app/                    # Next.js app router pages
 │   ├── page.js            # Home page
+│   ├── about/             # About page
+│   ├── search/            # Movie search page
 │   ├── monitoring/        # Monitoring dashboard
 │   ├── experiments/       # A/B testing dashboard
-│   └── layout.js          # Root layout
+│   ├── layout.js          # Root layout
+│   ├── providers.jsx      # App providers
+│   └── globals.css        # Global styles
 ├── components/            # Reusable components
 │   ├── recommendations/   # Recommendation display components
+│   │   ├── RecommendationCard.jsx
+│   │   └── RecommendationGrid.jsx
+│   ├── search/           # Search components
+│   │   ├── MovieCard.js   # Movie display card
+│   │   ├── Rating.js      # Rating component
+│   │   ├── SearchBar.js   # Search input
+│   │   └── SearchResults.js # Search results display
 │   ├── monitoring/        # Metrics and monitoring components
+│   │   ├── ABTestResults.jsx
+│   │   ├── LatencyChart.jsx
+│   │   ├── MetricCard.jsx
+│   │   ├── MetricsDashboard.jsx
+│   │   └── SystemHealth.jsx
 │   ├── ui/               # Generic UI components
+│   │   ├── ErrorMessage.jsx
+│   │   ├── LoadingSpinner.jsx
+│   │   ├── ModelSelector.jsx
+│   │   └── UserInput.jsx
 │   └── layout/           # Layout components
+│       └── Header.jsx
 ├── config/               # Configuration management
 │   └── app.config.js     # Centralized app configuration
 ├── contexts/             # React contexts
@@ -34,8 +55,11 @@ src/
 │   └── AppContext.jsx    # Application state
 ├── services/             # Service layer
 │   ├── api.service.js    # API client with retry logic
-│   └── auth.service.js   # Authentication service
+│   ├── auth.service.js   # Authentication service
+│   └── movie.service.js  # Movie data service
 ├── hooks/                # Custom React hooks
+│   └── useMovie.js       # Movie data hook
+├── lib/                  # Library utilities
 ├── types/                # TypeScript types (if using TS)
 └── utils/                # Utility functions
 ```

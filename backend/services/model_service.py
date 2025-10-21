@@ -12,7 +12,7 @@ from datetime import datetime
 import numpy as np
 
 from config.settings import get_settings
-from recommender.models import PopularityModel, CollaborativeFilteringModel, ALSModel
+from recommender.models_impl import PopularityModel, CollaborativeFilteringModel, ALSModel
 from services.cache_service import CacheService
 
 settings = get_settings()
@@ -40,16 +40,29 @@ class ModelService:
     
     async def _load_metadata(self):
         """Load model metadata from registry"""
-        metadata_files = settings.model_registry_path.glob("*/metadata.json")
+        print(f"Loading metadata from: {settings.model_registry_path}")
+        metadata_files = list(settings.model_registry_path.glob("*/*/metadata.json"))
+        print(f"Found {len(metadata_files)} metadata files")
         
-        for metadata_file in metadata_files:
+        # Clear existing metadata to avoid duplicates
+        self.model_metadata.clear()
+        
+        for i, metadata_file in enumerate(metadata_files):
             try:
+                print(f"  [{i+1}/{len(metadata_files)}] Loading: {metadata_file}")
                 with open(metadata_file, 'r') as f:
                     metadata = json.load(f)
                     model_name = metadata['name']
-                    self.model_metadata[model_name] = metadata
+                    print(f"    Model name: {model_name}")
+                    print(f"    Current keys: {list(self.model_metadata.keys())}")
+                    # Only add base model name, not versioned entries
+                    if ':' not in model_name:
+                        self.model_metadata[model_name] = metadata
+                    print(f"    After loading keys: {list(self.model_metadata.keys())}")
             except Exception as e:
                 print(f"Failed to load metadata from {metadata_file}: {e}")
+        
+        print(f"Final model_metadata keys: {list(self.model_metadata.keys())}")
     
     async def load_model(self, model_name: str, version: Optional[str] = None) -> Any:
         """Load a model into memory"""
@@ -95,49 +108,29 @@ class ModelService:
                 # Load model from disk
                 if model_path.exists():
                     with open(model_path, 'rb') as f:
-                        model = pickle.load(f)
+                        loaded_data = pickle.load(f)
                     
-                    # Load metadata
+                    # Check if it's a dict (old format) or actual model object
+                    if isinstance(loaded_data, dict):
+                        # Old format - create a new model instance
+                        model = await self._create_model_from_dict(model_name, loaded_data)
+                    else:
+                        model = loaded_data
+                    
+                    # Load metadata (but don't store it in model_metadata - it's already loaded)
                     metadata_path = model_path.parent / "metadata.json"
                     if metadata_path.exists():
                         with open(metadata_path, 'r') as f:
                             metadata = json.load(f)
-                            # Ensure minimal fields
-                            metadata.setdefault('name', model_name)
-                            metadata.setdefault('version', version or 'latest')
-                            metadata.setdefault('type', model_name)
-                            metadata.setdefault('trained_at', datetime.utcnow().isoformat())
-                            metadata.setdefault('metrics', {})
-                            metadata.setdefault('parameters', {})
-                            self.model_metadata[cache_key] = metadata
                     
                     # Cache the model
                     self.models[cache_key] = model
                     
                     # Update app state
                     from app.state import app_state
-                    # Convert trained_at to datetime where possible
-                    trained_at = metadata.get('trained_at')
-                    try:
-                        from datetime import datetime as _dt
-                        if isinstance(trained_at, str):
-                            trained_at_dt = _dt.fromisoformat(trained_at.replace('Z', '+00:00'))
-                        elif trained_at is None:
-                            trained_at_dt = _dt.utcnow()
-                        else:
-                            trained_at_dt = trained_at
-                    except Exception:
-                        trained_at_dt = datetime.utcnow()
-
-                    await app_state.update_model_info(model_name, {
-                        'name': metadata.get('name', model_name),
-                        'version': metadata.get('version', version or 'latest'),
-                        'type': metadata.get('type', model_name),
-                        'trained_at': trained_at_dt,
-                        'metrics': metadata.get('metrics', {}),
-                        'parameters': metadata.get('parameters', {}),
-                        'active': True,
-                    })
+                    # Use base model name for app state
+                    base_model_name = model_name.split(':')[0]
+                    await app_state.update_model_info(base_model_name, metadata)
                     
                     return model
                 else:
@@ -146,6 +139,37 @@ class ModelService:
             except Exception as e:
                 print(f"Error loading model {model_name}: {e}")
                 raise
+    
+    async def _create_model_from_dict(self, model_name: str, data: Dict) -> Any:
+        """Create a model instance from dictionary data"""
+        print(f"Creating {model_name} model from dict data")
+        
+        # Create appropriate model based on name
+        if model_name == "popularity":
+            model = PopularityModel()
+        elif model_name == "collaborative":
+            model = CollaborativeFilteringModel()
+        elif model_name == "als":
+            model = ALSModel()
+        else:
+            model = PopularityModel()  # Default fallback
+        
+        # Set attributes from dict if available
+        if model_name == "popularity":
+            if 'top_items' in data:
+                model.popular_movies = data['top_items']
+            elif 'popular_movies' in data:
+                model.popular_movies = data['popular_movies']
+        elif model_name == "collaborative":
+            if 'item_similarity' in data:
+                model.item_similarity = data.get('item_similarity')
+            if 'user_item_matrix' in data:
+                model.user_item_matrix = data.get('user_item_matrix')
+        elif model_name == "als":
+            # ALS model attributes will be set if needed
+            pass
+        
+        return model
     
     async def _create_default_model(self, model_name: str) -> Any:
         """Create a default model if none exists"""
@@ -212,39 +236,18 @@ class ModelService:
         features: Optional[Dict] = None
     ) -> List[int]:
         """Get recommendations from a model"""
-        try:
-            # Load model
-            model = await self.load_model(model_name)
-            
-            # Check cache first
-            if self.cache_service:
-                cache_key = f"reco:{model_name}:{user_id}:{k}"
-                cached = await self.cache_service.get(cache_key)
-                if cached:
-                    return cached
-            
-            # Get predictions
-            if isinstance(model, dict):
-                # Handle dictionary-based models
-                if model.get('type') == 'popularity':
-                    # Use top_items from the model
-                    top_items = model.get('top_items', [])
-                    if not top_items:
-                        print(f"WARNING: No top_items found in popularity model, using fallback")
-                        recommendations = list(range(1, k + 1))
-                    else:
-                        # top_items is already a list of movie IDs
-                        recommendations = top_items[:k]
-                else:
-                    # Fallback for other dictionary models
-                    recommendations = list(range(1, k + 1))
-            else:
-                # Handle object-based models
-                recommendations = await model.predict(user_id, k, features)
-        except Exception as e:
-            print(f"ERROR in get_recommendations: {e}")
-            print(f"Model name: {model_name}, User ID: {user_id}, k: {k}")
-            raise
+        # Load model
+        model = await self.load_model(model_name)
+        
+        # Check cache first
+        if self.cache_service:
+            cache_key = f"reco:{model_name}:{user_id}:{k}"
+            cached = await self.cache_service.get(cache_key)
+            if cached:
+                return cached
+        
+        # Get predictions
+        recommendations = await model.predict(user_id, k)
         
         # Cache results
         if self.cache_service:
@@ -259,16 +262,25 @@ class ModelService:
     async def list_models(self) -> List[Dict[str, Any]]:
         """List available models"""
         models = []
+        seen_models = set()
         
         for model_name in self.model_metadata:
             metadata = self.model_metadata[model_name]
+            # Extract base model name (remove :version suffix)
+            base_name = metadata.get('name', model_name.split(':')[0])
+            
+            # Skip if we've already added this model
+            if base_name in seen_models:
+                continue
+            
+            seen_models.add(base_name)
             models.append({
-                "name": metadata.get('name', model_name),
+                "name": base_name,
                 "version": metadata.get('version', 'unknown'),
                 "type": metadata.get('type', 'unknown'),
                 "trained_at": metadata.get('trained_at'),
                 "metrics": metadata.get('metrics', {}),
-                "active": model_name in self.models
+                "active": model_name in self.models or f"{base_name}:latest" in self.models
             })
         
         return models

@@ -1,0 +1,49 @@
+name: API Probe
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  API_URL: ${{ secrets.API_URL }}
+  KAFKA_BOOTSTRAP_SERVERS: ${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}
+  KAFKA_SECURITY_PROTOCOL: SASL_SSL
+  KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
+  KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
+  TEAM_PREFIX: ${{ secrets.TEAM_PREFIX }}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install httpx confluent-kafka
+    
+    - name: Run probe
+      run: |
+        python scripts/probe.py --runs 20 --delay 2
+    
+    - name: Generate probe report
+      if: always()
+      run: |
+        echo "## Probe Report - $(date)" > probe_report.txt
+        echo "API URL: $API_URL" >> probe_report.txt
+        echo "Team: $TEAM_PREFIX" >> probe_report.txt
+    
+    - name: Upload probe results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: probe-results
+        path: probe_report.txt

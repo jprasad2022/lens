@@ -12,3 +12,8 @@ async def start_consumer(kafka: KafkaService):
 
 
 
+
+
+
+
+

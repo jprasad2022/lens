@@ -1,12 +1,13 @@
 """
-Kafka service stub for local development when Kafka is not configured.
+Kafka service factory - returns real or stub implementation based on configuration.
 """
 
+import os
 from typing import Any, Dict, List
 
 
-class KafkaService:
-    """No-op Kafka service used unless real Kafka config is provided."""
+class KafkaServiceStub:
+    """No-op Kafka service used for local development."""
 
     async def initialize(self) -> None:
         return None
@@ -31,6 +32,23 @@ class KafkaService:
 
     async def produce_feedback(self, payload: Dict[str, Any]) -> None:
         return None
+
+
+def get_kafka_service():
+    """Factory function to get appropriate Kafka service."""
+    # Check if Kafka is configured
+    if os.getenv("KAFKA_BOOTSTRAP_SERVERS") and os.getenv("KAFKA_BOOTSTRAP_SERVERS") != "localhost:9092":
+        # Use real implementation
+        from services.kafka_service_impl import KafkaServiceImpl
+        return KafkaServiceImpl()
+    else:
+        # Use stub for local development
+        return KafkaServiceStub()
+
+
+# For backwards compatibility
+KafkaService = KafkaServiceStub
+
 
 
 

@@ -204,6 +204,7 @@ class SimpleModelTrainer:
         
         # Save metadata
         metadata = {
+            'name': model_type,  # Add the required 'name' field
             'model_type': model_type,
             'version': version,
             'trained_at': model['training_date'],
