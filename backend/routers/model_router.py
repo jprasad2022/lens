@@ -52,6 +52,20 @@ async def list_models(debug: bool = False, full_debug: bool = False):
     return sorted(model_names)  # Sort for consistent order
 
 
+from fastapi import Response
+
+@router.options("/models/switch")
+async def switch_model_options():
+    """Handle preflight OPTIONS request"""
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        }
+    )
+
 @router.post("/models/switch")
 async def switch_model(req: ModelSwitchRequest):
     # Update the default model and active models map
