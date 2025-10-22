@@ -135,8 +135,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Add custom middleware
@@ -202,6 +203,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     # Log the full traceback in development
     if settings.debug:
         traceback.print_exc()
+    
+    # Log all errors with method and path
+    print(f"ERROR: {request.method} {request.url.path} - {str(exc)}")
     
     return JSONResponse(
         status_code=500,

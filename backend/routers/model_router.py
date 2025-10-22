@@ -5,7 +5,7 @@ import os
 print(f"LOADING MODEL_ROUTER FROM: {__file__}")
 print(f"ABSOLUTE PATH: {os.path.abspath(__file__)}")
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 
 from app.state import app_state
 from models.schemas import ModelSwitchRequest, RetrainRequest
@@ -51,20 +51,6 @@ async def list_models(debug: bool = False, full_debug: bool = False):
     
     return sorted(model_names)  # Sort for consistent order
 
-
-from fastapi import Response
-
-@router.options("/models/switch")
-async def switch_model_options():
-    """Handle preflight OPTIONS request"""
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-        }
-    )
 
 @router.post("/models/switch")
 async def switch_model(req: ModelSwitchRequest):
