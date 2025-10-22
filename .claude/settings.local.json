@@ -12,7 +12,8 @@
       "Bash(docker-compose stop:*)",
       "Bash(curl:*)",
       "Bash(docker cp:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }
