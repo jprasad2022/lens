@@ -49,6 +49,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Warning: Could not download data: {e}")
     
+    # Download models from GCS if needed
+    try:
+        from utils.download_models import download_model_registry
+        download_model_registry()
+    except Exception as e:
+        print(f"Warning: Could not download models: {e}")
+    
     try:
         # Initialize model service
         print("Initializing model service...")
