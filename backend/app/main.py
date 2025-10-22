@@ -130,7 +130,14 @@ app = FastAPI(
     redoc_url="/redoc",  # Always enable redoc for debugging
 )
 
-# Add CORS middleware
+# Add custom middleware FIRST (executed last)
+if settings.enable_metrics:
+    app.add_middleware(PrometheusMiddleware)
+if settings.rate_limit_enabled:
+    app.add_middleware(RateLimitMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
+
+# Add CORS middleware LAST (executed first)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
@@ -139,13 +146,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
-
-# Add custom middleware
-app.add_middleware(RequestLoggingMiddleware)
-if settings.rate_limit_enabled:
-    app.add_middleware(RateLimitMiddleware)
-if settings.enable_metrics:
-    app.add_middleware(PrometheusMiddleware)
 
 # Include routers
 app.include_router(
@@ -193,6 +193,16 @@ async def health_check() -> Dict[str, Any]:
         )
     
     return health_status
+
+# Debug endpoint
+@app.get("/debug/cors", include_in_schema=False)
+async def debug_cors() -> Dict[str, Any]:
+    """Debug CORS settings"""
+    return {
+        "allowed_origins": settings.allowed_origins,
+        "allowed_origins_type": str(type(settings.allowed_origins)),
+        "allowed_origins_items": [str(origin) for origin in settings.allowed_origins] if settings.allowed_origins else []
+    }
 
 # Global exception handler
 @app.exception_handler(Exception)

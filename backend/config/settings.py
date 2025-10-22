@@ -21,6 +21,13 @@ class Settings(BaseSettings):
         default=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8000", "https://lens-smoky-six.vercel.app"]
     )
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        print(f"[CORS DEBUG] Loaded allowed_origins: {self.allowed_origins}")
+        print(f"[CORS DEBUG] Type: {type(self.allowed_origins)}")
+        for i, origin in enumerate(self.allowed_origins):
+            print(f"[CORS DEBUG] Origin {i}: '{origin}' (length: {len(origin)})")
+    
     @validator("allowed_origins", pre=True)
     def parse_allowed_origins(cls, v):
         if isinstance(v, str):
