@@ -19,16 +19,27 @@ settings = get_settings()
 
 async def load_data():
     """Load MovieLens data"""
-    data_path = settings.movielens_path
+    data_path = settings.data_path  # Use data_path instead of movielens_path
     
     # Load ratings
-    ratings_path = data_path / "ratings.csv"
-    ratings_df = pd.read_csv(ratings_path)
+    ratings_path = data_path / "ratings.dat"
+    ratings_df = pd.read_csv(
+        ratings_path,
+        sep='::',
+        names=['user_id', 'movie_id', 'rating', 'timestamp'],
+        engine='python'
+    )
     print(f"Loaded {len(ratings_df)} ratings")
     
     # Load movies
-    movies_path = data_path / "movies.csv"
-    movies_df = pd.read_csv(movies_path)
+    movies_path = data_path / "movies.dat"
+    movies_df = pd.read_csv(
+        movies_path,
+        sep='::',
+        names=['movie_id', 'title', 'genres'],
+        engine='python',
+        encoding='latin-1'
+    )
     print(f"Loaded {len(movies_df)} movies")
     
     return ratings_df, movies_df

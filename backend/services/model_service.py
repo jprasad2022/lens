@@ -110,6 +110,12 @@ class ModelService:
                     with open(model_path, 'rb') as f:
                         loaded_data = pickle.load(f)
                     
+                    # Debug: Log what was loaded
+                    print(f"[MODEL DEBUG] Loaded object type: {type(loaded_data)}")
+                    print(f"[MODEL DEBUG] Module: {loaded_data.__class__.__module__ if hasattr(loaded_data, '__class__') else 'N/A'}")
+                    print(f"[MODEL DEBUG] Class: {loaded_data.__class__.__name__ if hasattr(loaded_data, '__class__') else 'N/A'}")
+                    print(f"[MODEL DEBUG] Has user_id_to_idx: {hasattr(loaded_data, 'user_id_to_idx') if not isinstance(loaded_data, dict) else 'N/A'}")
+                    
                     # Check if it's a dict (old format) or actual model object
                     if isinstance(loaded_data, dict):
                         # Old format - create a new model instance
