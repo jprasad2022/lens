@@ -13,7 +13,6 @@ export const appConfig = {
       // Recommendation endpoints
       recommend: '/recommend',
       search: '/search',
-      ratings: '/ratings',
       health: '/healthz',
       metrics: '/metrics',
       feedback: '/feedback',
@@ -25,6 +24,8 @@ export const appConfig = {
       // User endpoints
       userHistory: '/users/{userId}/history',
       userPreferences: '/users/{userId}/preferences',
+      userRate: '/users/{userId}/rate',
+      userWatch: '/users/{userId}/watch',
       
       // Admin endpoints
       retrain: '/admin/retrain',

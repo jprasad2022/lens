@@ -65,6 +65,15 @@ async def get_recommendations(
         if not model_name:
             model_name = await app_state.get_current_model(user_id)
         
+        # Send request event to Kafka
+        if app_state.kafka_service:
+            await app_state.kafka_service.produce_reco_request(
+                user_id=user_id,
+                request_id=request_id,
+                model=model_name,
+                k=params.k
+            )
+        
         # Get recommendations
         result = await rec_service.get_recommendations(
             user_id=user_id,

@@ -1,0 +1,67 @@
+{
+  "popularity": {
+    "accuracy": {
+      "precision@10": 0.17036659877800409,
+      "recall@10": 0.03301790629278091,
+      "ndcg@10": 0.17641905853092546,
+      "rmse": 0.8453575360785218
+    },
+    "training": {
+      "time_seconds": 0.37947630882263184,
+      "model_params": {}
+    },
+    "inference": {
+      "avg_latency_ms": 0.0,
+      "p50_latency_ms": 0.0,
+      "p95_latency_ms": 0.0,
+      "p99_latency_ms": 0.0,
+      "throughput_users_per_sec": 13838.933614887159
+    },
+    "size_mb": 0.05260658264160156
+  },
+  "collaborative": {
+    "accuracy": {
+      "precision@10": 0.054989816700611,
+      "recall@10": 0.020205258102617956,
+      "ndcg@10": 0.05645392780732962,
+      "rmse": 0.7721641836609824
+    },
+    "training": {
+      "time_seconds": 11.350970983505249,
+      "model_params": {}
+    },
+    "inference": {
+      "avg_latency_ms": 325.9222936630249,
+      "p50_latency_ms": 312.3410940170288,
+      "p95_latency_ms": 409.5512151718139,
+      "p99_latency_ms": 483.46498250961304,
+      "throughput_users_per_sec": 3.188479952262321
+    },
+    "size_mb": 11.050527572631836
+  },
+  "als": {
+    "accuracy": {
+      "precision@10": 0.16032553407934894,
+      "recall@10": 0.035845498334495934,
+      "ndcg@10": 0.1692607015840483,
+      "rmse": 0.8673903753000172
+    },
+    "training": {
+      "time_seconds": 25.40473222732544,
+      "model_params": {
+        "factors": 100,
+        "regularization": 0.01,
+        "iterations": 30,
+        "alpha": 40
+      }
+    },
+    "inference": {
+      "avg_latency_ms": 0.695197582244873,
+      "p50_latency_ms": 0.0,
+      "p95_latency_ms": 3.4718751907348624,
+      "p99_latency_ms": 6.196420192718519,
+      "throughput_users_per_sec": 2331.9048625087567
+    },
+    "size_mb": 11.482293128967285
+  }
+}

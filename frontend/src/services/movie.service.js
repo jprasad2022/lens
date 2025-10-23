@@ -11,10 +11,19 @@ class MovieService {
   }
 
   async rateMovie(userId, movieId, rating) {
-    const response = await apiService.client.post(appConfig.api.endpoints.ratings, {
-      user_id: userId,
+    const endpoint = appConfig.api.endpoints.userRate.replace('{userId}', userId);
+    const response = await apiService.client.post(endpoint, {
       movie_id: movieId,
       rating: rating,
+    });
+    return response.data;
+  }
+
+  async trackWatch(userId, movieId, progress) {
+    const endpoint = appConfig.api.endpoints.userWatch.replace('{userId}', userId);
+    const response = await apiService.client.post(endpoint, {
+      movie_id: movieId,
+      progress: progress,
     });
     return response.data;
   }

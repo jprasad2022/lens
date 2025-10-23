@@ -2,8 +2,8 @@ name: API Probe
 
 on:
   schedule:
-    # Run every hour
-    - cron: '0 * * * *'
+    # Run once a day at 2 AM UTC
+    - cron: '0 2 * * *'
   workflow_dispatch:  # Allow manual trigger
 
 env:

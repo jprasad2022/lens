@@ -33,6 +33,21 @@ class KafkaServiceStub:
     async def produce_feedback(self, payload: Dict[str, Any]) -> None:
         return None
 
+    async def produce_reco_request(
+        self,
+        user_id: int,
+        request_id: str,
+        model: str,
+        k: int,
+    ) -> None:
+        return None
+
+    async def produce_watch_event(self, user_id: int, movie_id: int, progress: float) -> None:
+        return None
+
+    async def produce_rate_event(self, user_id: int, movie_id: int, rating: float) -> None:
+        return None
+
 
 def get_kafka_service():
     """Factory function to get appropriate Kafka service."""

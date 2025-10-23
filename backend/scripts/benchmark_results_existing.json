@@ -1,0 +1,125 @@
+{
+  "popularity": {
+    "inference": {
+      "avg_latency_ms": 0.0,
+      "p50_latency_ms": 0.0,
+      "p95_latency_ms": 0.0,
+      "p99_latency_ms": 0.0,
+      "throughput_users_per_sec": 13838.933614887159
+    },
+    "size_mb": 0.05260658264160156,
+    "metadata": {
+      "name": "popularity",
+      "version": "0.3.0",
+      "trained_at": "2025-10-22 21:48:30",
+      "training_time_seconds": 0.37947630882263184,
+      "model_size_bytes": 0,
+      "metrics": {},
+      "validation_metrics": {
+        "precision@10": 0.25194672131147544,
+        "recall@10": 0.052166644944445804,
+        "ndcg@10": 0.2679580772447668,
+        "rmse": 0.8704762538763017
+      },
+      "test_metrics": {
+        "precision@10": 0.17036659877800409,
+        "recall@10": 0.03301790629278091,
+        "ndcg@10": 0.17641905853092546,
+        "rmse": 0.8453575360785218
+      },
+      "training_history": [],
+      "best_params": {},
+      "n_movies": 3633,
+      "n_ratings": 700147,
+      "time_decay_days": 365,
+      "min_ratings_required": 5,
+      "global_mean_rating": 3.601880747900084,
+      "split_method": "time"
+    }
+  },
+  "collaborative": {
+    "inference": {
+      "avg_latency_ms": 325.9222936630249,
+      "p50_latency_ms": 312.3410940170288,
+      "p95_latency_ms": 409.5512151718139,
+      "p99_latency_ms": 483.46498250961304,
+      "throughput_users_per_sec": 3.188479952262321
+    },
+    "size_mb": 11.050527572631836,
+    "metadata": {
+      "name": "collaborative",
+      "version": "0.3.0",
+      "trained_at": "2025-10-22 22:49:56",
+      "training_time_seconds": 11.350970983505249,
+      "model_size_bytes": 0,
+      "metrics": {},
+      "validation_metrics": {
+        "precision@10": 0.03398357289527721,
+        "recall@10": 0.010010233052472516,
+        "ndcg@10": 0.034697533162663295,
+        "rmse": 0.7839444874087533
+      },
+      "test_metrics": {
+        "precision@10": 0.054989816700611,
+        "recall@10": 0.020205258102617956,
+        "ndcg@10": 0.05645392780732962,
+        "rmse": 0.7721641836609824
+      },
+      "training_history": [],
+      "best_params": {},
+      "n_users": 4870,
+      "n_movies": 3633,
+      "n_ratings": 700147,
+      "sparsity": 0.9604273737601532,
+      "global_mean": 3.601880747900084,
+      "split_method": "time"
+    }
+  },
+  "als": {
+    "inference": {
+      "avg_latency_ms": 0.695197582244873,
+      "p50_latency_ms": 0.0,
+      "p95_latency_ms": 3.4718751907348624,
+      "p99_latency_ms": 6.196420192718519,
+      "throughput_users_per_sec": 2331.9048625087567
+    },
+    "size_mb": 11.482293128967285,
+    "metadata": {
+      "name": "als",
+      "version": "0.3.0",
+      "trained_at": "2025-10-22 23:04:25",
+      "training_time_seconds": 25.40473222732544,
+      "model_size_bytes": 0,
+      "metrics": {},
+      "validation_metrics": {
+        "precision@10": 0.24692622950819673,
+        "recall@10": 0.05204633598287211,
+        "ndcg@10": 0.2589670091099946,
+        "rmse": 0.8822118819843302
+      },
+      "test_metrics": {
+        "precision@10": 0.16032553407934894,
+        "recall@10": 0.035845498334495934,
+        "ndcg@10": 0.1692607015840483,
+        "rmse": 0.8673903753000172
+      },
+      "training_history": [],
+      "best_params": {
+        "factors": 100,
+        "regularization": 0.01,
+        "alpha": 40,
+        "cv_score": 0.40400452470795195
+      },
+      "n_users": 4870,
+      "n_movies": 3633,
+      "n_ratings": 700147,
+      "model_params": {
+        "factors": 100,
+        "regularization": 0.01,
+        "iterations": 30,
+        "alpha": 40
+      },
+      "split_method": "time"
+    }
+  }
+}

@@ -13,7 +13,10 @@
       "Bash(curl:*)",
       "Bash(docker cp:*)",
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(docker logs:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": []
   }

@@ -51,4 +51,9 @@ tenacity==8.2.3
 pytest==7.4.4
 pytest-asyncio==0.23.3
 pytest-cov==4.1.0
-httpx==0.26.0
+
+# Benchmarking and Performance Analysis
+psutil==5.9.0
+matplotlib==3.7.1  # Optional: For visualization
+seaborn==0.12.2  # Optional: For enhanced plots
+memory-profiler==0.61.0  # Optional: For detailed memory analysis

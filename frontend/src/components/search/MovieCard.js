@@ -1,6 +1,7 @@
 
 import Image from 'next/image';
 import Rating from './Rating';
+import WatchButton from '@/components/movie/WatchButton';
 
 export default function MovieCard({ movie }) {
   return (
@@ -16,6 +17,9 @@ export default function MovieCard({ movie }) {
       <div className="p-4">
         <h3 className="font-bold text-lg mb-2">{movie.title}</h3>
         <Rating movieId={movie.id} />
+        <div className="mt-3">
+          <WatchButton movieId={movie.id} movieTitle={movie.title} />
+        </div>
       </div>
     </div>
   );

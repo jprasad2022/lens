@@ -5,6 +5,7 @@ import { FiThumbsUp, FiThumbsDown, FiStar, FiPlay, FiBookmark, FiInfo, FiFilm } 
 import { apiService } from '@/services/api.service';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
+import WatchButton from '@/components/movie/WatchButton';
 
 export default function RecommendationCard({ movie, rank, model }) {
   const { user } = useAuth();
@@ -136,6 +137,11 @@ export default function RecommendationCard({ movie, rank, model }) {
         <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-4">
           {movie.overview || `A ${movie.genres?.[0]?.toLowerCase() || 'film'} from ${new Date(movie.release_date).getFullYear() || 'unknown year'}, rated ${movie.vote_average?.toFixed(1) || 'N/A'}/10 by ${movie.vote_count?.toLocaleString() || '0'} users.`}
         </p>
+        
+        {/* Watch Button */}
+        <div className="mb-4 flex justify-center">
+          <WatchButton movieId={movie.id} movieTitle={movie.title} />
+        </div>
         
         {/* Feedback Section */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">

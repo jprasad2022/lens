@@ -15,9 +15,9 @@ from prometheus_client import make_asgi_app
 
 from config.settings import get_settings
 from app.state import AppState
-from routers import recommendation_router, model_router, monitoring_router
+from routers import recommendation_router, model_router, monitoring_router, interaction_router
 from services.model_service import ModelService
-from services.kafka_service import KafkaService
+from services.kafka_service import get_kafka_service
 from services.movie_metadata_service import MovieMetadataService
 from services.rating_statistics_service import RatingStatisticsService
 from services.user_demographics_service import UserDemographicsService
@@ -80,7 +80,7 @@ async def lifespan(app: FastAPI):
         # Initialize Kafka if enabled
         if settings.kafka_bootstrap_servers != "localhost:9092":
             print("Initializing Kafka service...")
-            app_state.kafka_service = KafkaService()
+            app_state.kafka_service = get_kafka_service()
             await app_state.kafka_service.initialize()
             
             # Start Kafka consumer in background
@@ -162,6 +162,11 @@ app.include_router(
     monitoring_router.router,
     prefix=f"{settings.api_prefix}",
     tags=["monitoring"]
+)
+app.include_router(
+    interaction_router.router,
+    prefix=f"{settings.api_prefix}",
+    tags=["interactions"]
 )
 
 # Mount metrics endpoint
