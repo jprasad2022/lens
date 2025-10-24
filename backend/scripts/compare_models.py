@@ -108,7 +108,8 @@ class ModelEvaluator:
         results["training_time"] = time.time() - start_time
         
         # Get model size
-        model_path = f"/tmp/{model_name}_model.pkl"
+        import tempfile
+        model_path = os.path.join(tempfile.gettempdir(), f"{model_name}_model.pkl")
         model.save(model_path)
         results["model_size_mb"] = os.path.getsize(model_path) / (1024 * 1024)
         

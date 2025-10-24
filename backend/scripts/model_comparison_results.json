@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-10-23 21:04:53",
+  "results": [
+    {
+      "model": "Popularity",
+      "training_time": 0.02175593376159668,
+      "inference_time_avg": 0.0,
+      "model_size_mb": 0.010519027709960938,
+      "hr@10": 0.71,
+      "hr@20": 0.81,
+      "ndcg@10": 0.26126985832063043,
+      "ndcg@20": 0.2528534704083628
+    },
+    {
+      "model": "Collaborative",
+      "training_time": 0.6687564849853516,
+      "inference_time_avg": 8.29401969909668,
+      "model_size_mb": 127.9247579574585,
+      "hr@10": 0.81,
+      "hr@20": 0.86,
+      "ndcg@10": 0.399670313008984,
+      "ndcg@20": 0.374772590447402
+    },
+    {
+      "model": "ALS",
+      "training_time": 4.451444149017334,
+      "inference_time_avg": 0.2706766128540039,
+      "model_size_mb": 11.097046852111816,
+      "hr@10": 0.84,
+      "hr@20": 0.86,
+      "ndcg@10": 0.35452982998663074,
+      "ndcg@20": 0.32294104013272174
+    }
+  ],
+  "data_stats": {
+    "total_ratings": 1000209,
+    "train_ratings": 800167,
+    "test_ratings": 200042
+  }
+}

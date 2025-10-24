@@ -1,0 +1,22 @@
+
+====================================================================================================
+MODEL COMPARISON RESULTS
+====================================================================================================
++---------------+---------------------+----------------------+-------------------+---------+---------+-----------+-----------+
+| Model         |   Training Time (s) |   Avg Inference (ms) |   Model Size (MB) |   HR@10 |   HR@20 |   NDCG@10 |   NDCG@20 |
++===============+=====================+======================+===================+=========+=========+===========+===========+
+| Popularity    |                0.02 |                 0    |              0.01 |    0.71 |    0.81 |    0.2613 |    0.2529 |
++---------------+---------------------+----------------------+-------------------+---------+---------+-----------+-----------+
+| Collaborative |                0.67 |                 8.29 |            127.92 |    0.81 |    0.86 |    0.3997 |    0.3748 |
++---------------+---------------------+----------------------+-------------------+---------+---------+-----------+-----------+
+| ALS           |                4.45 |                 0.27 |             11.1  |    0.84 |    0.86 |    0.3545 |    0.3229 |
++---------------+---------------------+----------------------+-------------------+---------+---------+-----------+-----------+
+
+Metric Definitions:
+- HR@K (Hit Rate @ K): Fraction of users for whom at least one relevant item appears in top-K recommendations
+- NDCG@K (Normalized Discounted Cumulative Gain @ K): Measures ranking quality, considering position of relevant items
+- Training Time: Time to train model on 80% of data
+- Avg Inference: Average time to generate recommendations for one user
+- Model Size: Serialized model size on disk
+
+Results saved to model_comparison_results.json

@@ -81,3 +81,26 @@ NUL
 
 # Documentation folder
 docs/
+
+# Temporary virtual environments
+temp_venv/
+
+# Project deliverable files (temporary)
+/data_snapshot_description.txt
+/data_snapshot_description_short.txt
+/deployment_info_short.txt
+/kafka_verification_report.txt
+/kafka_verification_report_short.txt
+/metric_definitions.txt
+/model_comparison_scripts.txt
+/ops_log_*.txt
+/format_comparison_table.py
+/comparison_raw.txt
+/model_comparison_results.json
+/model_comparison_output.txt
+/model_comparison_formatted.md
+
+# Generated helper scripts
+/scripts/generate_ops_log.py
+/scripts/generate_sample_ops_data.py
+/scripts/run_probe_docker.sh
