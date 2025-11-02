@@ -1,0 +1,67 @@
+{
+  "popularity_baseline": {
+    "metrics": {
+      "precision": {
+        "P@5": 0.36800000000000005,
+        "P@10": 0.35200000000000004,
+        "P@20": 0.30749999999999994
+      },
+      "recall": {
+        "R@5": 0.03409779417555793,
+        "R@10": 0.06682005521276187,
+        "R@20": 0.11300183539206944
+      },
+      "ndcg": {
+        "NDCG@5": 0.8537994541421146,
+        "NDCG@10": 0.7627693989674142,
+        "NDCG@20": 0.7007142758917122
+      },
+      "map": {
+        "MAP": 0.058485417723006874
+      },
+      "coverage": 0.0051506567087303634
+    },
+    "description": "Recommends most popular movies from training set"
+  },
+  "random_baseline": {
+    "metrics": {
+      "precision": {
+        "P@5": 0.018000000000000002,
+        "P@10": 0.021,
+        "P@20": 0.02
+      },
+      "recall": {
+        "R@5": 0.0008791059858939981,
+        "R@10": 0.0019749494941947053,
+        "R@20": 0.00504362241868062
+      },
+      "ndcg": {
+        "NDCG@5": 0.4821199147015811,
+        "NDCG@10": 0.3856475626930236,
+        "NDCG@20": 0.32679027331712607
+      },
+      "map": {
+        "MAP": 0.0006455069883647155
+      },
+      "coverage": 0.41050733968580994
+    },
+    "description": "Recommends random movies"
+  },
+  "subpopulations": {
+    "low_activity": {
+      "user_count": 54,
+      "avg_ratings": 9.296296296296296
+    },
+    "medium_activity": {
+      "user_count": 1644,
+      "avg_ratings": 49.55352798053528
+    },
+    "high_activity": {
+      "user_count": 1561,
+      "avg_ratings": 268.1031390134529
+    }
+  },
+  "split_date": "2000-11-01",
+  "train_size": 500477,
+  "test_size": 499732
+}

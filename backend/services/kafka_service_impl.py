@@ -115,7 +115,7 @@ class KafkaServiceImpl:
                     topics_to_create.append(NewTopic(
                         topic_name,
                         num_partitions=3,
-                        replication_factor=3,
+                        replication_factor=1,  # Local Redpanda only has 1 broker
                         config={
                             "retention.ms": "604800000",  # 7 days
                             "compression.type": "gzip",

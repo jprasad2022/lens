@@ -65,5 +65,6 @@ def download_movielens_data():
         print(f"❌ Error downloading data: {e}")
         print("   Continuing with empty data...")
 
+
 if __name__ == "__main__":
     download_movielens_data()

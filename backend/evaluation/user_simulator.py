@@ -7,12 +7,13 @@ import asyncio
 import random
 import json
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Any
 import numpy as np
 
-from services.kafka_service import KafkaService
+from services.kafka_service import get_kafka_service
 from services.recommendation_service import RecommendationService
 from services.rating_statistics_service import RatingStatisticsService
+from recommender.model_service import ModelService
 from config.settings import get_settings
 
 settings = get_settings()
@@ -21,7 +22,7 @@ settings = get_settings()
 class UserSimulator:
     """Simulates user interactions with recommendations"""
     
-    def __init__(self, kafka_service: KafkaService, rating_service: RatingStatisticsService):
+    def __init__(self, kafka_service: Any, rating_service: RatingStatisticsService):
         self.kafka = kafka_service
         self.rating_service = rating_service
         
@@ -96,7 +97,10 @@ class UserSimulator:
         """Simulate a complete user session"""
         
         # Get recommendations for the user
-        rec_service = RecommendationService(None)  # Assumes model service is injected elsewhere
+        model_service = ModelService()
+        await model_service.load_models()
+        rec_service = RecommendationService(model_service)
+        
         recommendations = await rec_service.get_recommendations(
             user_id=user_id,
             k=num_recommendations
@@ -147,8 +151,8 @@ class UserSimulator:
 async def run_simulation(num_users: int = 100, num_sessions_per_user: int = 5):
     """Run simulation for multiple users"""
     
-    kafka_service = KafkaService()
-    await kafka_service.start()
+    kafka_service = get_kafka_service()
+    await kafka_service.initialize()
     
     rating_service = RatingStatisticsService()
     await rating_service.initialize()
@@ -175,7 +179,7 @@ async def run_simulation(num_users: int = 100, num_sessions_per_user: int = 5):
             except Exception as e:
                 print(f"  Error in session {session + 1}: {e}")
     
-    await kafka_service.stop()
+    await kafka_service.close()
     print("Simulation complete!")
 
 
