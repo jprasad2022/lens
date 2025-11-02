@@ -3,7 +3,21 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   images: {
-    domains: ['image.tmdb.org', 'localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'image.tmdb.org',
+        pathname: '/t/p/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+    ],
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',

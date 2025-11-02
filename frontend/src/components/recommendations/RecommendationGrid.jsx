@@ -1,15 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '@/services/api.service';
 import { useApp } from '@/contexts/AppContext';
 import RecommendationCard from './RecommendationCard';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import ErrorMessage from '../ui/ErrorMessage';
+import MovieDetailsModal from '../movie/MovieDetailsModal';
 import { FiClock, FiCpu, FiRefreshCw, FiFilm } from 'react-icons/fi';
 
 export default function RecommendationGrid({ userId, count = 20 }) {
   const { selectedModel } = useApp();
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['recommendations', userId, selectedModel, count],
@@ -109,6 +113,10 @@ export default function RecommendationGrid({ userId, count = 20 }) {
               movie={movie}
               rank={index + 1}
               model={selectedModel}
+              onViewDetails={() => {
+                setSelectedMovie(movie);
+                setShowModal(true);
+              }}
             />
           </div>
         ))}
@@ -133,6 +141,16 @@ export default function RecommendationGrid({ userId, count = 20 }) {
           </div>
         </div>
       )}
+      
+      {/* Single Modal Instance */}
+      <MovieDetailsModal 
+        movie={selectedMovie}
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setSelectedMovie(null);
+        }}
+      />
     </div>
   );
 }

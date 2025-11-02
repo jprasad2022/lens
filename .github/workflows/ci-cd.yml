@@ -1,0 +1,202 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOCKER_REGISTRY: gcr.io
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  BACKEND_IMAGE: recommendation-backend
+  FRONTEND_IMAGE: recommendation-frontend
+
+jobs:
+  # Backend Tests and Linting
+  backend-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio black flake8
+    
+    - name: Lint with flake8
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Format check with black
+      run: |
+        cd backend
+        black --check .
+    
+    - name: Run tests with coverage
+      run: |
+        cd backend
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=html --cov-report=term
+    
+    - name: Check test coverage
+      run: |
+        cd backend
+        coverage report --fail-under=70
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+  # Frontend Tests and Linting
+  frontend-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Lint
+      run: |
+        cd frontend
+        npm run lint
+    
+    - name: Run tests
+      run: |
+        cd frontend
+        npm test -- --coverage --watchAll=false
+    
+    - name: Build
+      run: |
+        cd frontend
+        npm run build
+
+  # Build and Push Docker Images
+  build-and-push:
+    needs: [backend-test, frontend-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    
+    - name: Configure Docker for GCR
+      run: |
+        gcloud auth configure-docker
+    
+    - name: Build and Push Backend
+      run: |
+        cd backend
+        docker build -t $DOCKER_REGISTRY/$GCP_PROJECT_ID/$BACKEND_IMAGE:$GITHUB_SHA .
+        docker tag $DOCKER_REGISTRY/$GCP_PROJECT_ID/$BACKEND_IMAGE:$GITHUB_SHA $DOCKER_REGISTRY/$GCP_PROJECT_ID/$BACKEND_IMAGE:latest
+        docker push $DOCKER_REGISTRY/$GCP_PROJECT_ID/$BACKEND_IMAGE:$GITHUB_SHA
+        docker push $DOCKER_REGISTRY/$GCP_PROJECT_ID/$BACKEND_IMAGE:latest
+    
+    - name: Build and Push Frontend
+      run: |
+        cd frontend
+        docker build -t $DOCKER_REGISTRY/$GCP_PROJECT_ID/$FRONTEND_IMAGE:$GITHUB_SHA .
+        docker tag $DOCKER_REGISTRY/$GCP_PROJECT_ID/$FRONTEND_IMAGE:$GITHUB_SHA $DOCKER_REGISTRY/$GCP_PROJECT_ID/$FRONTEND_IMAGE:latest
+        docker push $DOCKER_REGISTRY/$GCP_PROJECT_ID/$FRONTEND_IMAGE:$GITHUB_SHA
+        docker push $DOCKER_REGISTRY/$GCP_PROJECT_ID/$FRONTEND_IMAGE:latest
+
+  # Deploy to Cloud Run
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    
+    - name: Deploy Backend to Cloud Run
+      run: |
+        gcloud run deploy recommendation-backend \
+          --image $DOCKER_REGISTRY/$GCP_PROJECT_ID/$BACKEND_IMAGE:$GITHUB_SHA \
+          --region us-central1 \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars "KAFKA_ENABLED=true" \
+          --set-env-vars "KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}" \
+          --set-env-vars "KAFKA_SECURITY_PROTOCOL=${{ secrets.KAFKA_SECURITY_PROTOCOL }}" \
+          --set-env-vars "KAFKA_SASL_USERNAME=${{ secrets.KAFKA_SASL_USERNAME }}" \
+          --set-env-vars "KAFKA_SASL_PASSWORD=${{ secrets.KAFKA_SASL_PASSWORD }}" \
+          --set-env-vars "KAFKA_SASL_MECHANISM=${{ secrets.KAFKA_SASL_MECHANISM }}" \
+          --set-env-vars "USE_REDPANDA=true" \
+          --set-env-vars "TEAM_PREFIX=team1" \
+          --min-instances 1 \
+          --max-instances 10
+    
+    - name: Deploy Frontend to Cloud Run
+      run: |
+        gcloud run deploy recommendation-frontend \
+          --image $DOCKER_REGISTRY/$GCP_PROJECT_ID/$FRONTEND_IMAGE:$GITHUB_SHA \
+          --region us-central1 \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars "NEXT_PUBLIC_API_URL=${{ secrets.API_URL }}" \
+          --min-instances 1 \
+          --max-instances 5
+
+  # Run Integration Tests
+  integration-test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run API Integration Tests
+      run: |
+        cd backend
+        pip install pytest requests
+        API_URL=${{ secrets.DEPLOYED_API_URL }} pytest tests/integration/ -v
+
+# Secrets required in GitHub:
+# - GCP_PROJECT_ID: Your GCP project ID
+# - GCP_SA_KEY: Service account key with Cloud Run Admin, Storage Admin permissions
+# - KAFKA_ENABLED: "true" or "false"
+# - KAFKA_BOOTSTRAP_SERVERS: Kafka broker addresses
+# - TEAM_PREFIX: Your team prefix for Kafka topics
+# - API_URL: Backend API URL for frontend
+# - DEPLOYED_API_URL: Deployed backend URL for integration tests

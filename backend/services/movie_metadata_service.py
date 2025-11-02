@@ -64,7 +64,8 @@ class MovieMetadataService:
                                 'title': title,
                                 'year': year,
                                 'genres': genres,
-                                'full_title': title_with_year
+                                'full_title': title_with_year,
+                                'poster_url': None  # Placeholder for poster URL
                             }
                 
                 self._initialized = True
@@ -98,7 +99,8 @@ class MovieMetadataService:
                     'title': f'Movie {movie_id}',
                     'year': None,
                     'genres': [],
-                    'full_title': f'Movie {movie_id}'
+                    'full_title': f'Movie {movie_id}',
+                    'poster_url': None  # Placeholder for poster URL
                 })
         
         return movies

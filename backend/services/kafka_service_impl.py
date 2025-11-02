@@ -29,12 +29,25 @@ class KafkaServiceImpl:
             "security.protocol": os.getenv("KAFKA_SECURITY_PROTOCOL", "PLAINTEXT"),
         }
         
-        # Add authentication if using Confluent Cloud
+        # Add authentication only if explicitly configured
         if self.kafka_config["security.protocol"] == "SASL_SSL":
+            sasl_mechanism = os.getenv("KAFKA_SASL_MECHANISM", "PLAIN")
             self.kafka_config.update({
-                "sasl.mechanisms": "PLAIN",
-                "sasl.username": os.getenv("KAFKA_API_KEY"),
-                "sasl.password": os.getenv("KAFKA_API_SECRET"),
+                "sasl.mechanism": sasl_mechanism,
+                "sasl.username": os.getenv("KAFKA_SASL_USERNAME") or os.getenv("KAFKA_API_KEY"),
+                "sasl.password": os.getenv("KAFKA_SASL_PASSWORD") or os.getenv("KAFKA_API_SECRET"),
+            })
+            
+            # Redpanda Cloud specific settings
+            if sasl_mechanism == "SCRAM-SHA-256":
+                self.kafka_config["sasl.mechanism"] = "SCRAM-SHA-256"
+        
+        # Redpanda-specific optimizations
+        if os.getenv("USE_REDPANDA", "true").lower() == "true":
+            self.kafka_config.update({
+                "compression.type": "snappy",
+                "linger.ms": "10",
+                "batch.size": "16384"
             })
         
         # Schema Registry configuration
@@ -52,6 +65,7 @@ class KafkaServiceImpl:
             "rate": f"{self.team_prefix}.rate",
             "reco_requests": f"{self.team_prefix}.reco_requests",
             "reco_responses": f"{self.team_prefix}.reco_responses",
+            "user_interactions": f"{self.team_prefix}.user_interactions",
         }
         
         self.producer = None
@@ -88,15 +102,25 @@ class KafkaServiceImpl:
         for topic_name in self.topics.values():
             if topic_name not in existing_topics:
                 # Configure topic with 3 partitions and replication factor of 3
-                topics_to_create.append(NewTopic(
-                    topic_name,
-                    num_partitions=3,
-                    replication_factor=3,
-                    config={
-                        "retention.ms": "604800000",  # 7 days
-                        "compression.type": "gzip",
-                    }
-                ))
+                # Redpanda Serverless has different config restrictions
+                if os.getenv("KAFKA_SECURITY_PROTOCOL") == "SASL_SSL":
+                    # Serverless/Cloud config
+                    topics_to_create.append(NewTopic(
+                        topic_name,
+                        num_partitions=1,  # Serverless handles partitioning
+                        replication_factor=3
+                    ))
+                else:
+                    # Local Redpanda config
+                    topics_to_create.append(NewTopic(
+                        topic_name,
+                        num_partitions=3,
+                        replication_factor=3,
+                        config={
+                            "retention.ms": "604800000",  # 7 days
+                            "compression.type": "gzip",
+                        }
+                    ))
         
         if topics_to_create:
             fs = self.admin_client.create_topics(topics_to_create)
@@ -217,6 +241,27 @@ class KafkaServiceImpl:
             
         except Exception as e:
             logger.error(f"Failed to produce rate event: {e}")
+    
+    async def produce_interaction_event(self, payload: Dict[str, Any]) -> None:
+        """Produce user interaction event for online evaluation."""
+        try:
+            # Add timestamp if not present
+            if "timestamp" not in payload:
+                payload["timestamp"] = datetime.utcnow().isoformat()
+            
+            # Extract key fields
+            user_id = payload.get("user_id", "unknown")
+            event_type = payload.get("event_type", "unknown")
+            
+            self.producer.produce(
+                self.topics["user_interactions"],
+                key=f"{user_id}_{event_type}",
+                value=json.dumps(payload),
+                callback=self._delivery_report
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to produce interaction event: {e}")
 
     async def health_check(self) -> Dict[str, Any]:
         """Check Kafka connectivity."""

@@ -227,3 +227,39 @@ async def get_popular_movies(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get popular movies: {str(e)}")
+
+@router.get("/search")
+async def search_movies(
+    q: str,
+    limit: int = 20
+):
+    """
+    Search movies by title
+    
+    - **q**: Search query
+    - **limit**: Maximum number of results (default: 20, max: 100)
+    """
+    try:
+        # Validate parameters
+        if not q or len(q.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Search query cannot be empty")
+        
+        if limit > 100:
+            limit = 100
+        
+        # Use movie metadata service to search
+        if not app_state.movie_metadata_service:
+            raise HTTPException(status_code=503, detail="Movie metadata service not available")
+        
+        results = await app_state.movie_metadata_service.search_movies(
+            query=q,
+            limit=limit
+        )
+        
+        # Return results directly as an array to match frontend expectations
+        return results
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to search movies: {str(e)}")

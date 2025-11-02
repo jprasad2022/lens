@@ -38,13 +38,13 @@
 }
 
 @layer components {
-  /* Modern card with hover effects */
+  /* Simplified card styles */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700;
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-6 border border-gray-200 dark:border-gray-700;
   }
 
   .card-movie {
-    @apply relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer;
+    @apply relative bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200;
   }
 
   /* Modern buttons with gradient effects */
