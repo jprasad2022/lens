@@ -19,12 +19,12 @@ settings = get_settings()
 
 class OnlineEvaluator:
     """Computes online evaluation metrics from Kafka events"""
-    
+
     def __init__(self):
         self.consumer = None
         self.recommendations = {}  # request_id -> recommendation details
         self.interactions = defaultdict(list)  # request_id -> list of interactions
-        
+
     async def start(self):
         """Start Kafka consumer"""
         self.consumer = AIOKafkaConsumer(
@@ -36,16 +36,16 @@ class OnlineEvaluator:
             auto_offset_reset='earliest'
         )
         await self.consumer.start()
-    
+
     async def stop(self):
         """Stop Kafka consumer"""
         if self.consumer:
             await self.consumer.stop()
-    
+
     async def consume_events(self, duration_minutes: int = 60):
         """Consume events for specified duration"""
         end_time = datetime.utcnow() + timedelta(minutes=duration_minutes)
-        
+
         async for message in self.consumer:
             # Store recommendation responses
             if message.topic == 'reco_responses':
@@ -59,7 +59,7 @@ class OnlineEvaluator:
                         'timestamp': data.get('timestamp'),
                         'latency_ms': data.get('latency_ms')
                     }
-            
+
             # Store user interactions
             elif message.topic == 'user_interactions':
                 data = message.value
@@ -72,14 +72,14 @@ class OnlineEvaluator:
                         'watch_duration': data.get('watch_duration_minutes'),
                         'watch_completion': data.get('watch_completion', 1.0)
                     })
-            
+
             # Check if we've reached the time limit
             if datetime.utcnow() >= end_time:
                 break
-    
+
     def calculate_metrics(self) -> Dict:
         """Calculate online evaluation metrics"""
-        
+
         metrics = {
             'total_recommendations': len(self.recommendations),
             'total_interactions': sum(len(v) for v in self.interactions.values()),
@@ -87,59 +87,59 @@ class OnlineEvaluator:
             'engagement_metrics': {},
             'latency_metrics': {}
         }
-        
+
         if not self.recommendations:
             return metrics
-        
+
         # Calculate proxy success metrics
         proxy_metrics = self._calculate_proxy_success()
         metrics['proxy_success_metrics'] = proxy_metrics
-        
+
         # Calculate engagement metrics
         engagement_metrics = self._calculate_engagement_metrics()
         metrics['engagement_metrics'] = engagement_metrics
-        
+
         # Calculate latency metrics
         latency_metrics = self._calculate_latency_metrics()
         metrics['latency_metrics'] = latency_metrics
-        
+
         return metrics
-    
+
     def _calculate_proxy_success(self) -> Dict:
         """Calculate proxy success metrics"""
-        
+
         # Define success: user watched at least one recommended movie within 2 hours
         success_window_minutes = 120
-        
+
         successful_sessions = 0
         total_sessions = len(self.recommendations)
-        
+
         click_through_rates = []
         precision_at_k = defaultdict(list)
-        
+
         for request_id, rec_data in self.recommendations.items():
             interactions = self.interactions.get(request_id, [])
             recommended_movies = set(rec_data['movie_ids'])
-            
+
             # Check if any recommended movie was watched
             watched_movies = {i['movie_id'] for i in interactions}
             watched_recommended = watched_movies & recommended_movies
-            
+
             if watched_recommended:
                 successful_sessions += 1
-            
+
             # Calculate CTR for this session
             if recommended_movies:
                 ctr = len(watched_recommended) / len(recommended_movies)
                 click_through_rates.append(ctr)
-            
+
             # Calculate precision@k
             for k in [1, 5, 10]:
                 if len(recommended_movies) >= k:
                     top_k_movies = set(rec_data['movie_ids'][:k])
                     watched_in_top_k = len(watched_movies & top_k_movies)
                     precision_at_k[k].append(watched_in_top_k / k)
-        
+
         return {
             'success_rate': successful_sessions / total_sessions if total_sessions > 0 else 0,
             'avg_ctr': np.mean(click_through_rates) if click_through_rates else 0,
@@ -147,14 +147,14 @@ class OnlineEvaluator:
             'precision_at_5': np.mean(precision_at_k[5]) if precision_at_k[5] else 0,
             'precision_at_10': np.mean(precision_at_k[10]) if precision_at_k[10] else 0,
         }
-    
+
     def _calculate_engagement_metrics(self) -> Dict:
         """Calculate user engagement metrics"""
-        
+
         watch_durations = []
         watch_completions = []
         ranks_of_watched = []
-        
+
         for interactions in self.interactions.values():
             for interaction in interactions:
                 if interaction.get('watch_duration'):
@@ -163,23 +163,23 @@ class OnlineEvaluator:
                     watch_completions.append(interaction['watch_completion'])
                 if interaction.get('rank'):
                     ranks_of_watched.append(interaction['rank'])
-        
+
         return {
             'avg_watch_duration_minutes': np.mean(watch_durations) if watch_durations else 0,
             'avg_watch_completion': np.mean(watch_completions) if watch_completions else 0,
             'median_rank_of_watched': np.median(ranks_of_watched) if ranks_of_watched else 0,
             'total_movies_watched': len(watch_durations)
         }
-    
+
     def _calculate_latency_metrics(self) -> Dict:
         """Calculate system latency metrics"""
-        
-        latencies = [r['latency_ms'] for r in self.recommendations.values() 
+
+        latencies = [r['latency_ms'] for r in self.recommendations.values()
                     if r.get('latency_ms') is not None]
-        
+
         if not latencies:
             return {}
-        
+
         return {
             'mean_latency_ms': np.mean(latencies),
             'p50_latency_ms': np.percentile(latencies, 50),
@@ -187,10 +187,10 @@ class OnlineEvaluator:
             'p99_latency_ms': np.percentile(latencies, 99),
             'max_latency_ms': max(latencies)
         }
-    
+
     def generate_report(self, metrics: Dict) -> str:
         """Generate evaluation report"""
-        
+
         report = f"""
 Online Evaluation Report
 ========================
@@ -226,27 +226,27 @@ P99 Latency: {metrics['latency_metrics'].get('p99_latency_ms', 0):.1f} ms
 
 async def run_online_evaluation():
     """Run online evaluation"""
-    
+
     evaluator = OnlineEvaluator()
     await evaluator.start()
-    
+
     print("Starting online evaluation...")
     print("Consuming events for 60 minutes...")
-    
+
     # Consume events
     await evaluator.consume_events(duration_minutes=60)
-    
+
     # Calculate metrics
     metrics = evaluator.calculate_metrics()
-    
+
     # Generate report
     report = evaluator.generate_report(metrics)
     print(report)
-    
+
     # Save metrics to file
     with open('online_evaluation_results.json', 'w') as f:
         json.dump(metrics, f, indent=2)
-    
+
     await evaluator.stop()
     print("Evaluation complete! Results saved to online_evaluation_results.json")
 

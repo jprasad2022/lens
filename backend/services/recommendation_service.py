@@ -40,15 +40,15 @@ class RecommendationService:
         if app_state.movie_metadata_service and app_state.rating_statistics_service:
             movies = await app_state.movie_metadata_service.get_movies(movie_ids)
             movie_stats = await app_state.rating_statistics_service.get_movies_stats(movie_ids)
-            
+
             recommendations = []
             for movie in movies:
                 movie_id = movie['id']
                 stats = movie_stats.get(movie_id, {})
-                
+
                 # Format release date from year
                 release_date = f"{movie.get('year', '')}-01-01" if movie.get('year') else None
-                
+
                 # Create a simple overview from genres
                 if movie['genres']:
                     genre_text = ' and '.join(movie['genres'][:2]).lower()
@@ -60,7 +60,7 @@ class RecommendationService:
                     overview += "."
                 else:
                     overview = "No description available."
-                
+
                 recommendations.append({
                     "id": movie_id,
                     "title": movie['title'],
@@ -143,18 +143,18 @@ class RecommendationService:
         """Return popular movies with optional filtering."""
         # Get more movies if filtering is needed
         fetch_k = k * 3 if (genre or year) else k
-        
+
         # Get popular movie IDs
         movie_ids = await self.model_service.get_recommendations(
             model_name="popularity", user_id=0, k=fetch_k
         )
-        
+
         # Get movie metadata
         from app.state import app_state
         if app_state.movie_metadata_service and app_state.rating_statistics_service:
             all_movies = await app_state.movie_metadata_service.get_movies(movie_ids)
             movie_stats = await app_state.rating_statistics_service.get_movies_stats(movie_ids)
-            
+
             # Filter by genre and/or year if specified
             if genre or year:
                 filtered_movies = []
@@ -166,7 +166,7 @@ class RecommendationService:
                     movie_id = movie['id']
                     stats = movie_stats.get(movie_id, {})
                     release_date = f"{movie.get('year', '')}-01-01" if movie.get('year') else None
-                    
+
                     filtered_movies.append({
                         "id": movie_id,
                         "title": movie['title'],
@@ -188,7 +188,7 @@ class RecommendationService:
                     movie_id = movie['id']
                     stats = movie_stats.get(movie_id, {})
                     release_date = f"{movie.get('year', '')}-01-01" if movie.get('year') else None
-                    
+
                     result_movies.append({
                         "id": movie_id,
                         "title": movie['title'],
@@ -204,7 +204,7 @@ class RecommendationService:
         else:
             # Fallback without metadata
             return [
-                {"id": movie_id, "title": f"Movie {movie_id}", "genres": []} 
+                {"id": movie_id, "title": f"Movie {movie_id}", "genres": []}
                 for movie_id in movie_ids[:k]
             ]
 

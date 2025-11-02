@@ -25,7 +25,7 @@ logger.info(f"K_REVISION (Cloud Run): {os.environ.get('K_REVISION', 'Not set')}"
 # Check for critical directories
 critical_paths = [
     "app",
-    "config", 
+    "config",
     "services",
     "routers",
     "data",
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # Cloud Run sets the PORT environment variable
     port = int(os.environ.get("PORT", 8000))
     logger.info(f"Starting server on port {port}")
-    
+
     try:
         uvicorn.run(
             "app.main:app",  # Pass as import string for reload to work

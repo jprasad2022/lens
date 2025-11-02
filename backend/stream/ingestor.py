@@ -71,10 +71,10 @@ SCHEMAS = {
 
 class StreamIngestor:
     """Ingest Kafka streams with validation and storage."""
-    
+
     def __init__(self, team_prefix: str = "team1"):
         self.team_prefix = team_prefix
-        
+
         # Kafka configuration
         self.kafka_config = {
             "bootstrap.servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
@@ -84,7 +84,7 @@ class StreamIngestor:
             "enable.auto.commit": True,
             "auto.commit.interval.ms": 5000,
         }
-        
+
         # Add authentication if needed
         if self.kafka_config["security.protocol"] == "SASL_SSL":
             self.kafka_config.update({
@@ -92,12 +92,12 @@ class StreamIngestor:
                 "sasl.username": os.getenv("KAFKA_API_KEY"),
                 "sasl.password": os.getenv("KAFKA_API_SECRET"),
             })
-        
+
         # Storage configuration
         self.storage_type = os.getenv("STORAGE_TYPE", "local")  # local, s3, gcs
         self.storage_bucket = os.getenv("STORAGE_BUCKET", "movielens-data")
         self.storage_prefix = os.getenv("STORAGE_PREFIX", f"{team_prefix}/events")
-        
+
         # Redis configuration (optional caching)
         self.redis_enabled = os.getenv("REDIS_ENABLED", "false").lower() == "true"
         if self.redis_enabled:
@@ -106,11 +106,11 @@ class StreamIngestor:
                 port=int(os.getenv("REDIS_PORT", 6379)),
                 decode_responses=True
             )
-        
+
         # Batch configuration
         self.batch_size = int(os.getenv("INGESTOR_BATCH_SIZE", 1000))
         self.batch_timeout = int(os.getenv("INGESTOR_BATCH_TIMEOUT", 60))  # seconds
-        
+
         # Event buffers
         self.buffers = {
             "watch": [],
@@ -118,7 +118,7 @@ class StreamIngestor:
             "reco_requests": [],
             "reco_responses": [],
         }
-        
+
         self.last_flush = datetime.utcnow()
         self.stats = {
             "valid": 0,
@@ -142,31 +142,31 @@ class StreamIngestor:
             # Parse message
             event = json.loads(message.value().decode('utf-8'))
             topic = message.topic()
-            
+
             # Determine event type from topic
             event_type = topic.split('.')[-1]  # e.g., "team1.watch" -> "watch"
-            
+
             # Validate event
             if not self.validate_event(event, event_type):
                 return
-            
+
             # Add metadata
             event["_ingested_at"] = datetime.utcnow().isoformat()
             event["_partition"] = message.partition()
             event["_offset"] = message.offset()
-            
+
             # Add to buffer
             self.buffers[event_type].append(event)
             self.stats["valid"] += 1
-            
+
             # Cache in Redis if enabled
             if self.redis_enabled and event_type in ["watch", "rate"]:
                 await self._cache_event(event, event_type)
-            
+
             # Check if we should flush
             if len(self.buffers[event_type]) >= self.batch_size:
                 await self.flush_buffer(event_type)
-            
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse message: {e}")
             self.stats["invalid"] += 1
@@ -189,15 +189,15 @@ class StreamIngestor:
         """Flush buffer to storage."""
         if not self.buffers[event_type]:
             return
-        
+
         try:
             # Convert to DataFrame
             df = pd.DataFrame(self.buffers[event_type])
-            
+
             # Generate filename with timestamp
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             filename = f"{event_type}_{timestamp}_{len(df)}_events.parquet"
-            
+
             # Save based on storage type
             if self.storage_type == "local":
                 await self._save_local(df, event_type, filename)
@@ -205,13 +205,13 @@ class StreamIngestor:
                 await self._save_s3(df, event_type, filename)
             elif self.storage_type == "gcs":
                 await self._save_gcs(df, event_type, filename)
-            
+
             logger.info(f"Flushed {len(df)} {event_type} events to {filename}")
             self.stats["flushed"] += len(df)
-            
+
             # Clear buffer
             self.buffers[event_type] = []
-            
+
         except Exception as e:
             logger.error(f"Failed to flush {event_type} buffer: {e}")
 
@@ -219,11 +219,11 @@ class StreamIngestor:
         """Save to local filesystem."""
         base_path = Path(f"data/snapshots/{self.storage_prefix}/{event_type}")
         base_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Save as Parquet
         filepath = base_path / filename
         df.to_parquet(filepath, engine='pyarrow', compression='snappy')
-        
+
         # Also save as CSV for easy inspection
         csv_filename = filename.replace('.parquet', '.csv')
         df.to_csv(base_path / csv_filename, index=False)
@@ -232,12 +232,12 @@ class StreamIngestor:
         """Save to S3."""
         s3_client = boto3.client('s3')
         key = f"{self.storage_prefix}/{event_type}/{filename}"
-        
+
         # Convert DataFrame to Parquet bytes
         table = pa.Table.from_pandas(df)
         buf = pa.BufferOutputStream()
         pq.write_table(table, buf, compression='snappy')
-        
+
         # Upload to S3
         s3_client.put_object(
             Bucket=self.storage_bucket,
@@ -254,7 +254,7 @@ class StreamIngestor:
         """Periodically flush buffers."""
         while True:
             await asyncio.sleep(self.batch_timeout)
-            
+
             # Check if we need to flush any buffers
             for event_type in self.buffers:
                 if self.buffers[event_type]:
@@ -265,7 +265,7 @@ class StreamIngestor:
         """Run the ingestor."""
         # Create consumer
         consumer = Consumer(self.kafka_config)
-        
+
         # Subscribe to topics
         topics = [
             f"{self.team_prefix}.watch",
@@ -273,31 +273,31 @@ class StreamIngestor:
             f"{self.team_prefix}.reco_requests",
             f"{self.team_prefix}.reco_responses",
         ]
-        
+
         consumer.subscribe(topics)
         logger.info(f"Subscribed to topics: {topics}")
-        
+
         # Start periodic flush task
         flush_task = asyncio.create_task(self.periodic_flush())
-        
+
         try:
             while True:
                 # Poll for messages
                 msg = consumer.poll(1.0)
-                
+
                 if msg is None:
                     continue
-                
+
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         continue
                     else:
                         logger.error(f"Consumer error: {msg.error()}")
                         break
-                
+
                 # Process message
                 await self.process_message(msg)
-                
+
         except KeyboardInterrupt:
             logger.info("Interrupted by user")
         finally:
@@ -305,11 +305,11 @@ class StreamIngestor:
             for event_type in self.buffers:
                 if self.buffers[event_type]:
                     await self.flush_buffer(event_type)
-            
+
             # Clean up
             flush_task.cancel()
             consumer.close()
-            
+
             # Print statistics
             logger.info(f"Ingestor statistics:")
             logger.info(f"  Valid events: {self.stats['valid']}")

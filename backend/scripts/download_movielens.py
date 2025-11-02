@@ -11,47 +11,47 @@ from pathlib import Path
 
 def download_movielens(data_dir="./data"):
     """Download and extract MovieLens 1M dataset"""
-    
+
     # Create data directory
     data_path = Path(data_dir)
     data_path.mkdir(exist_ok=True)
-    
+
     ml_path = data_path / "ml-1m"
-    
+
     # Check if already downloaded
     if ml_path.exists() and any(ml_path.iterdir()):
         print(f"MovieLens dataset already exists at {ml_path}")
         return True
-    
+
     # Download URL
     url = "https://files.grouplens.org/datasets/movielens/ml-1m.zip"
     zip_path = data_path / "ml-1m.zip"
-    
+
     print(f"Downloading MovieLens 1M dataset from {url}...")
-    
+
     try:
         # Download with progress
         def download_progress(block_num, block_size, total_size):
             downloaded = block_num * block_size
             percent = min(downloaded * 100 / total_size, 100)
             print(f"Progress: {percent:.1f}%", end='\r')
-        
+
         urllib.request.urlretrieve(url, zip_path, download_progress)
         print("\nDownload complete!")
-        
+
         # Extract
         print("Extracting dataset...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(data_path)
-        
+
         # Clean up
         zip_path.unlink()
         print(f"Dataset extracted to {ml_path}")
-        
+
         # Verify files
         expected_files = ['movies.dat', 'ratings.dat', 'users.dat', 'README']
         actual_files = list(ml_path.glob('*.dat')) + list(ml_path.glob('README'))
-        
+
         if len(actual_files) >= 3:
             print("\nDataset contents:")
             for file in ml_path.iterdir():
@@ -61,7 +61,7 @@ def download_movielens(data_dir="./data"):
         else:
             print("Warning: Dataset may be incomplete")
             return False
-            
+
     except Exception as e:
         print(f"Error downloading dataset: {e}")
         if zip_path.exists():
@@ -70,10 +70,10 @@ def download_movielens(data_dir="./data"):
 
 def create_sample_data(data_dir="./data"):
     """Create small sample dataset for testing"""
-    
+
     sample_path = Path(data_dir) / "sample"
     sample_path.mkdir(exist_ok=True)
-    
+
     # Sample movies
     movies_data = """1::Toy Story (1995)::Animation|Children's|Comedy
 2::Jumanji (1995)::Adventure|Children's|Fantasy
@@ -85,14 +85,14 @@ def create_sample_data(data_dir="./data"):
 8::Tom and Huck (1995)::Adventure|Children's
 9::Sudden Death (1995)::Action
 10::GoldenEye (1995)::Action|Adventure|Thriller"""
-    
+
     # Sample users
     users_data = """1::F::1::10::48067
 2::M::56::16::70072
 3::M::25::15::55117
 4::M::45::7::02460
 5::M::25::20::55455"""
-    
+
     # Sample ratings
     ratings_data = """1::1::5::978300760
 1::2::3::978302109
@@ -104,12 +104,12 @@ def create_sample_data(data_dir="./data"):
 4::5::5::978299000
 5::6::4::978298900
 5::7::3::978299100"""
-    
+
     # Write files
     (sample_path / "movies.dat").write_text(movies_data)
     (sample_path / "users.dat").write_text(users_data)
     (sample_path / "ratings.dat").write_text(ratings_data)
-    
+
     print(f"\nSample dataset created at {sample_path}")
     print("Files created:")
     for file in sample_path.glob("*.dat"):
@@ -118,13 +118,13 @@ def create_sample_data(data_dir="./data"):
 def main():
     """Main function"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Download MovieLens dataset")
     parser.add_argument("--data-dir", default="./data", help="Data directory path")
     parser.add_argument("--sample", action="store_true", help="Create sample dataset only")
-    
+
     args = parser.parse_args()
-    
+
     if args.sample:
         create_sample_data(args.data_dir)
     else:

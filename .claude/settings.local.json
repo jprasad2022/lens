@@ -17,7 +17,9 @@
       "Bash(docker logs:*)",
       "Bash(python3:*)",
       "Bash(pip3 install:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

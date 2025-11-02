@@ -30,8 +30,8 @@ class ModelSwitchRequest(BaseModel):
     """Model switch request"""
     model: str = Field(..., description="Model name to switch to")
     user_percentage: Optional[float] = Field(
-        default=None, 
-        ge=0.0, 
+        default=None,
+        ge=0.0,
         le=1.0,
         description="Percentage of users for gradual rollout"
     )
@@ -148,7 +148,7 @@ class DateRangeParams(BaseModel):
     """Date range parameters"""
     start_date: datetime = Field(..., description="Start date")
     end_date: datetime = Field(..., description="End date")
-    
+
     @validator('end_date')
     def end_date_after_start(cls, v, values):
         if 'start_date' in values and v < values['start_date']:

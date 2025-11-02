@@ -19,7 +19,7 @@ settings = get_settings()
 class WatchEventRequest(BaseModel):
     movie_id: int = Field(..., description="Movie ID")
     progress: float = Field(..., ge=0, le=1, description="Watch progress (0-1)")
-    
+
 class RatingEventRequest(BaseModel):
     movie_id: int = Field(..., description="Movie ID")
     rating: float = Field(..., ge=0.5, le=5.0, description="Rating (0.5-5.0)")
@@ -37,7 +37,7 @@ async def record_watch_event(
 ) -> EventResponse:
     """
     Record a watch event for a user
-    
+
     - **user_id**: User ID (1-6040 for MovieLens 1M)
     - **movie_id**: Movie ID
     - **progress**: Watch progress between 0 and 1
@@ -49,7 +49,7 @@ async def record_watch_event(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid user ID. Must be between 1 and 6040"
             )
-        
+
         # Send to Kafka
         if app_state.kafka_service:
             await app_state.kafka_service.produce_watch_event(
@@ -57,12 +57,12 @@ async def record_watch_event(
                 movie_id=event.movie_id,
                 progress=event.progress
             )
-            
+
         return EventResponse(
             status="success",
             message=f"Watch event recorded for user {user_id}, movie {event.movie_id}"
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -77,7 +77,7 @@ async def record_rating_event(
 ) -> EventResponse:
     """
     Record a rating event for a user
-    
+
     - **user_id**: User ID (1-6040 for MovieLens 1M)
     - **movie_id**: Movie ID
     - **rating**: Rating between 0.5 and 5.0
@@ -89,7 +89,7 @@ async def record_rating_event(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid user ID. Must be between 1 and 6040"
             )
-        
+
         # Send to Kafka
         if app_state.kafka_service:
             await app_state.kafka_service.produce_rate_event(
@@ -97,12 +97,12 @@ async def record_rating_event(
                 movie_id=event.movie_id,
                 rating=event.rating
             )
-            
+
         return EventResponse(
             status="success",
             message=f"Rating event recorded for user {user_id}, movie {event.movie_id}"
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -116,7 +116,7 @@ async def get_user_history(
 ):
     """
     Get user interaction history (placeholder for future implementation)
-    
+
     - **user_id**: User ID (1-6040 for MovieLens 1M)
     """
     # This would query from the data stored by the ingestor

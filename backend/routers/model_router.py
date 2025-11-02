@@ -20,7 +20,7 @@ print(f"MODEL_ROUTER: Creating router, current routes: {router.routes}")
 async def list_models(debug: bool = False, full_debug: bool = False):
     if not app_state.model_service:
         raise HTTPException(status_code=503, detail="Model service not initialized")
-    
+
     # If full debug mode, return everything
     if full_debug:
         models = await app_state.model_service.list_models()
@@ -29,7 +29,7 @@ async def list_models(debug: bool = False, full_debug: bool = False):
             "list_models_result": models,
             "model_names": [model["name"] for model in models],
         }
-    
+
     # If debug mode, return raw data
     if debug:
         return {
@@ -37,18 +37,18 @@ async def list_models(debug: bool = False, full_debug: bool = False):
             "model_metadata": app_state.model_service.model_metadata,
             "models_cache_keys": list(app_state.model_service.models.keys()),
         }
-    
+
     # Get unique model names from metadata, excluding :latest entries
     model_names = []
     for key in app_state.model_service.model_metadata.keys():
         if ':' not in key:  # Skip versioned entries like "popularity:latest"
             model_names.append(key)
-    
+
     # Debug logging
     print(f"[DEBUG] Model metadata keys: {list(app_state.model_service.model_metadata.keys())}")
     print(f"[DEBUG] Filtered model names: {model_names}")
     print(f"[DEBUG] Sorted result: {sorted(model_names)}")
-    
+
     return sorted(model_names)  # Sort for consistent order
 
 
@@ -72,7 +72,7 @@ async def get_raw_models():
     """Get raw model metadata for debugging"""
     if not app_state.model_service:
         raise HTTPException(status_code=503, detail="Model service not initialized")
-    
+
     return {
         "model_metadata_keys": list(app_state.model_service.model_metadata.keys()),
         "model_metadata": app_state.model_service.model_metadata,

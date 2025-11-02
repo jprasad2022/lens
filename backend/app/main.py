@@ -23,7 +23,7 @@ from services.rating_statistics_service import RatingStatisticsService
 from services.user_demographics_service import UserDemographicsService
 from stream.consumer import start_consumer
 from app.middleware import (
-    PrometheusMiddleware, 
+    PrometheusMiddleware,
     RateLimitMiddleware,
     RequestLoggingMiddleware
 )
@@ -38,72 +38,72 @@ app_state = AppState()
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     startup_start = time.time()
-    
+
     # Initialize services
     print("Starting MovieLens Recommender API...")
-    
+
     # Download data from GCS if needed
     try:
         from utils.download_data import download_movielens_data
         download_movielens_data()
     except Exception as e:
         print(f"Warning: Could not download data: {e}")
-    
+
     # Download models from GCS if needed
     try:
         from utils.download_models import download_model_registry
         download_model_registry()
     except Exception as e:
         print(f"Warning: Could not download models: {e}")
-    
+
     try:
         # Initialize model service
         print("Initializing model service...")
         app_state.model_service = ModelService()
         await app_state.model_service.initialize()
-        
+
         # Initialize movie metadata service
         print("Initializing movie metadata service...")
         app_state.movie_metadata_service = MovieMetadataService()
         await app_state.movie_metadata_service.initialize()
-        
+
         # Initialize rating statistics service
         print("Initializing rating statistics service...")
         app_state.rating_statistics_service = RatingStatisticsService()
         await app_state.rating_statistics_service.initialize()
-        
+
         # Initialize user demographics service
         print("Initializing user demographics service...")
         app_state.user_demographics_service = UserDemographicsService()
         await app_state.user_demographics_service.initialize()
-        
+
         # Initialize Kafka if enabled
         if settings.kafka_bootstrap_servers != "localhost:9092":
             print("Initializing Kafka service...")
             app_state.kafka_service = get_kafka_service()
             await app_state.kafka_service.initialize()
-            
+
             # Start Kafka consumer in background
             app_state.consumer_task = asyncio.create_task(
                 start_consumer(app_state.kafka_service)
             )
-        
+
         # Load default model
         print(f"Loading default model: {settings.default_model}")
         await app_state.model_service.load_model(settings.default_model)
-        
+
         startup_time = time.time() - startup_start
         print(f"Application started in {startup_time:.2f}s")
-        
+
     except Exception as e:
         print(f"Startup failed: {str(e)}")
         raise
-    
+
     yield
-    
+
     # Shutdown
     print("Shutting down...")
-    
+
     # Cancel consumer task
     if hasattr(app_state, 'consumer_task') and app_state.consumer_task:
         app_state.consumer_task.cancel()
@@ -111,14 +111,14 @@ async def lifespan(app: FastAPI):
             await app_state.consumer_task
         except asyncio.CancelledError:
             pass
-    
+
     # Cleanup services
     if app_state.kafka_service:
         await app_state.kafka_service.close()
-    
+
     if app_state.model_service:
         await app_state.model_service.cleanup()
-    
+
     print("Shutdown complete")
 
 # Create FastAPI app
@@ -190,13 +190,13 @@ async def root() -> Dict[str, Any]:
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint"""
     health_status = await app_state.get_health_status()
-    
+
     if not health_status["healthy"]:
         return JSONResponse(
             status_code=503,
             content=health_status
         )
-    
+
     return health_status
 
 # Debug endpoint
@@ -214,14 +214,14 @@ async def debug_cors() -> Dict[str, Any]:
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler"""
     import traceback
-    
+
     # Log the full traceback in development
     if settings.debug:
         traceback.print_exc()
-    
+
     # Log all errors with method and path
     print(f"ERROR: {request.method} {request.url.path} - {str(exc)}")
-    
+
     return JSONResponse(
         status_code=500,
         content={

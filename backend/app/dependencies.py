@@ -20,10 +20,10 @@ async def get_current_user_optional(
     """Get current user if authenticated (optional)"""
     if not settings.enable_auth:
         return None
-    
+
     if not credentials:
         return None
-    
+
     try:
         auth_service = AuthService()
         user = await auth_service.verify_token(credentials.credentials)
@@ -37,14 +37,14 @@ async def get_current_user_required(
     """Get current user (required)"""
     if not settings.enable_auth:
         return {"uid": "anonymous", "email": "anonymous@example.com"}
-    
+
     if not credentials:
         raise HTTPException(
             status_code=401,
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     try:
         auth_service = AuthService()
         user = await auth_service.verify_token(credentials.credentials)
@@ -68,13 +68,13 @@ async def verify_api_key(
     """Verify API key"""
     if not settings.api_key_required:
         return True
-    
+
     if not api_key:
         raise HTTPException(
             status_code=401,
             detail="API key required"
         )
-    
+
     # In production, check against database or external service
     valid_keys = settings.valid_api_keys  # List from settings
     if api_key not in valid_keys:
@@ -82,5 +82,5 @@ async def verify_api_key(
             status_code=401,
             detail="Invalid API key"
         )
-    
+
     return True

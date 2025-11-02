@@ -45,26 +45,26 @@ async def get_recommendations(
 ) -> RecommendationResponse:
     """
     Get movie recommendations for a user
-    
+
     - **user_id**: User ID (1-6040 for MovieLens 1M)
     - **k**: Number of recommendations (default: 20, max: 100)
     - **model**: Model name to use (optional, defaults to current model)
     """
     start_time = time.time()
     request_id = str(uuid.uuid4())
-    
+
     # Track request
     await app_state.increment_request_count()
-    
+
     try:
         # Get recommendation service
         rec_service = RecommendationService(app_state.model_service)
-        
+
         # Determine model to use
         model_name = params.model
         if not model_name:
             model_name = await app_state.get_current_model(user_id)
-        
+
         # Send request event to Kafka
         if app_state.kafka_service:
             await app_state.kafka_service.produce_reco_request(
@@ -73,7 +73,7 @@ async def get_recommendations(
                 model=model_name,
                 k=params.k
             )
-        
+
         # Get recommendations
         result = await rec_service.get_recommendations(
             user_id=user_id,
@@ -81,10 +81,10 @@ async def get_recommendations(
             model_name=model_name,
             features=params.features
         )
-        
+
         # Calculate latency
         latency_ms = (time.time() - start_time) * 1000
-        
+
         # Update metrics
         recommend_requests.labels(
             status='200',
@@ -92,7 +92,7 @@ async def get_recommendations(
             cached=str(result.get('cached', False))
         ).inc()
         recommend_latency.observe(time.time() - start_time)
-        
+
         # Send to Kafka if enabled
         if app_state.kafka_service:
             await app_state.kafka_service.produce_reco_response(
@@ -104,7 +104,7 @@ async def get_recommendations(
                 model_version=result['model_info']['version'],
                 cached=result.get('cached', False)
             )
-        
+
         # Build response
         response = RecommendationResponse(
             user_id=user_id,
@@ -115,9 +115,9 @@ async def get_recommendations(
             cached=result.get('cached', False),
             request_id=request_id
         )
-        
+
         return response
-        
+
     except ValueError as e:
         await app_state.increment_error_count()
         recommend_requests.labels(status='400', model=params.model or 'unknown', cached='false').inc()
@@ -125,7 +125,7 @@ async def get_recommendations(
     except Exception as e:
         await app_state.increment_error_count()
         recommend_requests.labels(status='500', model=params.model or 'unknown', cached='false').inc()
-        
+
         # Send error to Kafka
         if app_state.kafka_service:
             await app_state.kafka_service.produce_reco_response(
@@ -137,7 +137,7 @@ async def get_recommendations(
                 model_version='unknown',
                 cached=False
             )
-        
+
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/feedback")
@@ -147,23 +147,23 @@ async def submit_feedback(
 ):
     """
     Submit feedback on a recommendation
-    
+
     Feedback types:
     - **positive**: User liked the recommendation
-    - **negative**: User disliked the recommendation  
+    - **negative**: User disliked the recommendation
     - **implicit**: Implicit feedback (e.g., user watched the movie)
     """
     try:
         # Store feedback
         rec_service = RecommendationService(app_state.model_service)
         await rec_service.store_feedback(feedback.dict())
-        
+
         # Send to Kafka if enabled
         if app_state.kafka_service:
             await app_state.kafka_service.produce_feedback(feedback.dict())
-        
+
         return {"status": "success", "message": "Feedback recorded"}
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to record feedback: {str(e)}")
 
@@ -176,22 +176,22 @@ async def explain_recommendations(
 ):
     """
     Get explanation for recommendations
-    
+
     Returns details about why certain movies were recommended
     """
     try:
         # Get recommendation service
         rec_service = RecommendationService(app_state.model_service)
-        
+
         # Get explanation
         explanation = await rec_service.explain_recommendations(
             user_id=user_id,
             model_name=model or await app_state.get_current_model(user_id),
             k=k
         )
-        
+
         return explanation
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -205,18 +205,18 @@ async def get_popular_movies(
 ):
     """
     Get popular movies
-    
+
     Returns most popular movies optionally filtered by genre and year
     """
     try:
         rec_service = RecommendationService(app_state.model_service)
-        
+
         movies = await rec_service.get_popular_movies(
             k=k,
             genre=genre,
             year=year
         )
-        
+
         return {
             "movies": [MovieInfo(**movie) for movie in movies],
             "filtered_by": {
@@ -224,7 +224,7 @@ async def get_popular_movies(
                 "year": year
             }
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get popular movies: {str(e)}")
 
@@ -235,7 +235,7 @@ async def search_movies(
 ):
     """
     Search movies by title
-    
+
     - **q**: Search query
     - **limit**: Maximum number of results (default: 20, max: 100)
     """
@@ -243,22 +243,22 @@ async def search_movies(
         # Validate parameters
         if not q or len(q.strip()) == 0:
             raise HTTPException(status_code=400, detail="Search query cannot be empty")
-        
+
         if limit > 100:
             limit = 100
-        
+
         # Use movie metadata service to search
         if not app_state.movie_metadata_service:
             raise HTTPException(status_code=503, detail="Movie metadata service not available")
-        
+
         results = await app_state.movie_metadata_service.search_movies(
             query=q,
             limit=limit
         )
-        
+
         # Return results directly as an array to match frontend expectations
         return results
-        
+
     except HTTPException:
         raise
     except Exception as e:

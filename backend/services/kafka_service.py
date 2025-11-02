@@ -47,7 +47,7 @@ class KafkaServiceStub:
 
     async def produce_rate_event(self, user_id: int, movie_id: int, rating: float) -> None:
         return None
-    
+
     async def produce_interaction_event(self, payload: Dict[str, Any]) -> None:
         return None
 

@@ -22,13 +22,13 @@ class KafkaServiceImpl:
     def __init__(self):
         # Get team prefix from environment
         self.team_prefix = os.getenv("TEAM_PREFIX", "team1")
-        
+
         # Kafka configuration
         self.kafka_config = {
             "bootstrap.servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
             "security.protocol": os.getenv("KAFKA_SECURITY_PROTOCOL", "PLAINTEXT"),
         }
-        
+
         # Add authentication only if explicitly configured
         if self.kafka_config["security.protocol"] == "SASL_SSL":
             sasl_mechanism = os.getenv("KAFKA_SASL_MECHANISM", "PLAIN")
@@ -37,11 +37,11 @@ class KafkaServiceImpl:
                 "sasl.username": os.getenv("KAFKA_SASL_USERNAME") or os.getenv("KAFKA_API_KEY"),
                 "sasl.password": os.getenv("KAFKA_SASL_PASSWORD") or os.getenv("KAFKA_API_SECRET"),
             })
-            
+
             # Redpanda Cloud specific settings
             if sasl_mechanism == "SCRAM-SHA-256":
                 self.kafka_config["sasl.mechanism"] = "SCRAM-SHA-256"
-        
+
         # Redpanda-specific optimizations
         if os.getenv("USE_REDPANDA", "true").lower() == "true":
             self.kafka_config.update({
@@ -49,7 +49,7 @@ class KafkaServiceImpl:
                 "linger.ms": "10",
                 "batch.size": "16384"
             })
-        
+
         # Schema Registry configuration
         self.schema_registry_url = os.getenv("SCHEMA_REGISTRY_URL", "")
         self.schema_registry_config = {}
@@ -58,7 +58,7 @@ class KafkaServiceImpl:
                 "url": self.schema_registry_url,
                 "basic.auth.user.info": f"{os.getenv('SCHEMA_REGISTRY_API_KEY')}:{os.getenv('SCHEMA_REGISTRY_API_SECRET')}"
             }
-        
+
         # Topic names
         self.topics = {
             "watch": f"{self.team_prefix}.watch",
@@ -67,7 +67,7 @@ class KafkaServiceImpl:
             "reco_responses": f"{self.team_prefix}.reco_responses",
             "user_interactions": f"{self.team_prefix}.user_interactions",
         }
-        
+
         self.producer = None
         self.admin_client = None
         self.schema_registry_client = None
@@ -77,19 +77,19 @@ class KafkaServiceImpl:
         try:
             # Create producer
             self.producer = Producer(self.kafka_config)
-            
+
             # Create admin client
             self.admin_client = AdminClient(self.kafka_config)
-            
+
             # Create schema registry client if configured
             if self.schema_registry_config:
                 self.schema_registry_client = SchemaRegistryClient(self.schema_registry_config)
-            
+
             # Create topics if they don't exist
             await self._create_topics_if_needed()
-            
+
             logger.info(f"Kafka service initialized with topics: {list(self.topics.values())}")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize Kafka service: {e}")
             raise
@@ -97,7 +97,7 @@ class KafkaServiceImpl:
     async def _create_topics_if_needed(self):
         """Create topics if they don't exist."""
         existing_topics = self.admin_client.list_topics(timeout=10).topics
-        
+
         topics_to_create = []
         for topic_name in self.topics.values():
             if topic_name not in existing_topics:
@@ -121,7 +121,7 @@ class KafkaServiceImpl:
                             "compression.type": "gzip",
                         }
                     ))
-        
+
         if topics_to_create:
             fs = self.admin_client.create_topics(topics_to_create)
             for topic, f in fs.items():
@@ -161,17 +161,17 @@ class KafkaServiceImpl:
                 "model_version": model_version,
                 "cached": cached,
             }
-            
+
             self.producer.produce(
                 self.topics["reco_responses"],
                 key=str(user_id),
                 value=json.dumps(event),
                 callback=self._delivery_report
             )
-            
+
             # Flush to ensure delivery
             self.producer.flush(timeout=1)
-            
+
         except Exception as e:
             logger.error(f"Failed to produce reco_response: {e}")
 
@@ -191,14 +191,14 @@ class KafkaServiceImpl:
                 "model": model,
                 "k": k,
             }
-            
+
             self.producer.produce(
                 self.topics["reco_requests"],
                 key=str(user_id),
                 value=json.dumps(event),
                 callback=self._delivery_report
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to produce reco_request: {e}")
 
@@ -211,14 +211,14 @@ class KafkaServiceImpl:
                 "movie_id": movie_id,
                 "progress": progress,
             }
-            
+
             self.producer.produce(
                 self.topics["watch"],
                 key=f"{user_id}_{movie_id}",
                 value=json.dumps(event),
                 callback=self._delivery_report
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to produce watch event: {e}")
 
@@ -231,35 +231,35 @@ class KafkaServiceImpl:
                 "movie_id": movie_id,
                 "rating": rating,
             }
-            
+
             self.producer.produce(
                 self.topics["rate"],
                 key=f"{user_id}_{movie_id}",
                 value=json.dumps(event),
                 callback=self._delivery_report
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to produce rate event: {e}")
-    
+
     async def produce_interaction_event(self, payload: Dict[str, Any]) -> None:
         """Produce user interaction event for online evaluation."""
         try:
             # Add timestamp if not present
             if "timestamp" not in payload:
                 payload["timestamp"] = datetime.utcnow().isoformat()
-            
+
             # Extract key fields
             user_id = payload.get("user_id", "unknown")
             event_type = payload.get("event_type", "unknown")
-            
+
             self.producer.produce(
                 self.topics["user_interactions"],
                 key=f"{user_id}_{event_type}",
                 value=json.dumps(payload),
                 callback=self._delivery_report
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to produce interaction event: {e}")
 
