@@ -90,11 +90,14 @@ jobs:
         image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/backend:${{ github.sha }}
         region: ${{ env.REGION }}
         env_vars: |
+          KAFKA_ENABLED=true
           KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}
-          KAFKA_API_KEY=${{ secrets.KAFKA_API_KEY }}
-          KAFKA_API_SECRET=${{ secrets.KAFKA_API_SECRET }}
-          KAFKA_SECURITY_PROTOCOL=SASL_SSL
-          KAFKA_SASL_MECHANISM=PLAIN
+          KAFKA_SECURITY_PROTOCOL=${{ secrets.KAFKA_SECURITY_PROTOCOL }}
+          KAFKA_SASL_USERNAME=${{ secrets.KAFKA_SASL_USERNAME }}
+          KAFKA_SASL_PASSWORD=${{ secrets.KAFKA_SASL_PASSWORD }}
+          KAFKA_SASL_MECHANISM=${{ secrets.KAFKA_SASL_MECHANISM }}
+          USE_REDPANDA=true
+          TEAM_PREFIX=team1
           MODEL_REGISTRY_PATH=/app/model_registry
           ENABLE_METRICS=true
         flags: |
