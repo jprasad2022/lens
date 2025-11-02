@@ -18,6 +18,7 @@ class RatingStatisticsService:
     
     def __init__(self):
         self.movie_stats: Dict[int, Dict] = {}
+        self.user_ratings: Dict[int, Dict[int, float]] = {}  # user_id -> {movie_id: rating}
         self._initialized = False
         self._lock = asyncio.Lock()
     
@@ -49,12 +50,18 @@ class RatingStatisticsService:
                         # Parse format: UserID::MovieID::Rating::Timestamp
                         parts = line.split('::')
                         if len(parts) == 4:
+                            user_id = int(parts[0])
                             movie_id = int(parts[1])
                             rating = float(parts[2])
                             
                             ratings_sum[movie_id] += rating
                             ratings_count[movie_id] += 1
                             ratings_distribution[movie_id][int(rating)] += 1
+                            
+                            # Store user ratings
+                            if user_id not in self.user_ratings:
+                                self.user_ratings[user_id] = {}
+                            self.user_ratings[user_id][movie_id] = rating
                 
                 # Calculate statistics for each movie
                 for movie_id in ratings_count:
@@ -134,3 +141,14 @@ class RatingStatisticsService:
                 return rank, len(self.movie_stats)
         
         return 0, len(self.movie_stats)
+    
+    async def get_user_rating(self, user_id: int, movie_id: int) -> Optional[float]:
+        """Get a specific user's rating for a movie"""
+        if not self._initialized:
+            await self.initialize()
+        
+        return self.user_ratings.get(user_id, {}).get(movie_id)
+    
+    async def get_movie_statistics(self, movie_id: int) -> Optional[Dict]:
+        """Get statistics for a specific movie (alias for get_movie_stats)"""
+        return await self.get_movie_stats(movie_id)

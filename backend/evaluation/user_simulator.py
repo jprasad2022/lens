@@ -12,7 +12,7 @@ import numpy as np
 
 from services.kafka_service import KafkaService
 from services.recommendation_service import RecommendationService
-from services.rating_service import RatingStatisticsService
+from services.rating_statistics_service import RatingStatisticsService
 from config.settings import get_settings
 
 settings = get_settings()
