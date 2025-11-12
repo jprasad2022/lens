@@ -7,6 +7,7 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 
+
 class AppState:
     """Global application state"""
 
@@ -135,7 +136,7 @@ class AppState:
             from services.ab_switch_service import get_ab_switch_service
             ab_service = get_ab_switch_service()
             return ab_service.get_model_for_user(user_id)
-        
+
         # Fallback to simple A/B test assignment
         if self.ab_test_active and self.ab_test_models and user_id:
             # Simple A/B test assignment based on user ID
@@ -156,6 +157,7 @@ class AppState:
             "active_models": len(self.active_models),
             "ab_test_active": self.ab_test_active,
         }
+
 
 # Global instance
 app_state = AppState()

@@ -14,6 +14,7 @@ from services.auth_service import AuthService
 settings = get_settings()
 security = HTTPBearer(auto_error=False)
 
+
 async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[dict]:
@@ -30,6 +31,7 @@ async def get_current_user_optional(
         return user
     except Exception:
         return None
+
 
 async def get_current_user_required(
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -56,11 +58,13 @@ async def get_current_user_required(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 async def get_api_key(
     x_api_key: Optional[str] = Header(None)
 ) -> Optional[str]:
     """Get API key from header"""
     return x_api_key
+
 
 async def verify_api_key(
     api_key: Optional[str] = Depends(get_api_key)

@@ -26,22 +26,31 @@ def test_health_and_metrics():
     print(f"Sample metrics (first 500 chars):\n{resp.text[:500]}...")
     
     # API metrics summary
-    resp = requests.get(f"{BASE_URL}/api/metrics/summary")
+    resp = requests.get(f"{BASE_URL}/api/monitoring/metrics/summary")
     print(f"\nAPI Metrics Summary: {json.dumps(resp.json(), indent=2)}")
 
 def test_model_registry():
     """Test model registry and versioning."""
     print("\n=== Testing Model Registry ===")
     
-    resp = requests.get(f"{BASE_URL}/api/models")
+    resp = requests.get(f"{BASE_URL}/api/model/models")
     models = resp.json()
     print(f"Available models: {json.dumps(models, indent=2)}")
     
-    # Get specific model info
-    if models["models"]:
-        model_name = models["models"][0]["name"]
-        resp = requests.get(f"{BASE_URL}/api/models/{model_name}")
-        print(f"\nModel '{model_name}' details: {json.dumps(resp.json(), indent=2)}")
+    # Get debug info about models
+    resp = requests.get(f"{BASE_URL}/api/model/debug-models")
+    if resp.status_code == 200:
+        debug_info = resp.json()
+        print(f"\nModel Registry Details:")
+        print(f"- Model metadata keys: {debug_info.get('model_metadata_keys', [])}")
+        print(f"- Models in cache: {debug_info.get('models_cache_keys', [])}")
+        
+        # Show metadata for first model if available
+        metadata = debug_info.get('model_metadata', {})
+        if metadata:
+            first_model = list(metadata.keys())[0]
+            print(f"\nExample model metadata for '{first_model}':")
+            print(json.dumps(metadata[first_model], indent=2))
 
 def test_ab_testing():
     """Test A/B testing functionality."""
@@ -80,7 +89,7 @@ def test_provenance():
     
     # Make a prediction request
     user_id = 12345
-    resp = requests.get(f"{BASE_URL}/api/recommendations/user/{user_id}")
+    resp = requests.get(f"{BASE_URL}/api/recommendation/recommend/{user_id}")
     
     if resp.status_code == 200:
         data = resp.json()
@@ -89,6 +98,8 @@ def test_provenance():
         print(f"- Model Version: {data.get('model_version', 'N/A')}")
         print(f"- Timestamp: {data.get('timestamp', 'N/A')}")
         print(f"- Model Used: {data.get('model_used', 'N/A')}")
+        print(f"- User ID: {data.get('user_id', 'N/A')}")
+        print(f"- Number of recommendations: {len(data.get('items', []))}")
         
         # Show full provenance trace
         print(f"\nFull provenance trace:")

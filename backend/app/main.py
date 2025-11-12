@@ -34,6 +34,7 @@ settings = get_settings()
 # Application state
 app_state = AppState()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
@@ -76,7 +77,7 @@ async def lifespan(app: FastAPI):
         print("Initializing user demographics service...")
         app_state.user_demographics_service = UserDemographicsService()
         await app_state.user_demographics_service.initialize()
-        
+
         # Initialize AB switch service
         print("Initializing A/B switch service...")
         from services.ab_switch_service import get_ab_switch_service
@@ -184,6 +185,7 @@ if settings.enable_metrics:
     metrics_app = make_asgi_app()
     app.mount("/metrics", metrics_app)
 
+
 # Root endpoint
 @app.get("/", include_in_schema=False)
 async def root() -> Dict[str, Any]:
@@ -194,6 +196,7 @@ async def root() -> Dict[str, Any]:
         "status": "running",
         "docs": "/docs" if settings.debug else None,
     }
+
 
 # Health check
 @app.get("/healthz", tags=["monitoring"])
@@ -209,6 +212,7 @@ async def health_check() -> Dict[str, Any]:
 
     return health_status
 
+
 # Debug endpoint
 @app.get("/debug/cors", include_in_schema=False)
 async def debug_cors() -> Dict[str, Any]:
@@ -218,6 +222,7 @@ async def debug_cors() -> Dict[str, Any]:
         "allowed_origins_type": str(type(settings.allowed_origins)),
         "allowed_origins_items": [str(origin) for origin in settings.allowed_origins] if settings.allowed_origins else []
     }
+
 
 # Global exception handler
 @app.exception_handler(Exception)
@@ -239,6 +244,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "message": str(exc) if settings.debug else "An error occurred",
         }
     )
+
 
 # Startup message
 @app.on_event("startup")

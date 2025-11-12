@@ -31,6 +31,7 @@ active_requests = Gauge(
     'Number of active requests'
 )
 
+
 class PrometheusMiddleware(BaseHTTPMiddleware):
     """Middleware for Prometheus metrics collection"""
 
@@ -68,6 +69,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         active_requests.dec()
 
         return response
+
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Simple rate limiting middleware"""
@@ -113,6 +115,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return response
 
+
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for request/response logging"""
 
@@ -143,6 +146,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                   f"-> {response.status_code} ({duration:.3f}s)")
 
         return response
+
 
 class CacheControlMiddleware(BaseHTTPMiddleware):
     """Middleware for cache control headers"""

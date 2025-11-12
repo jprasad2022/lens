@@ -9,6 +9,7 @@ from pydantic import Field, validator
 import os
 from pathlib import Path
 
+
 class Settings(BaseSettings):
     """Application settings with environment variable support"""
 
@@ -35,7 +36,7 @@ class Settings(BaseSettings):
             import json
             try:
                 return json.loads(v)
-            except:
+            except Exception:
                 return v.split(",")  # Fallback to comma-separated
         return v
 
