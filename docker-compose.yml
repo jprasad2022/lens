@@ -125,6 +125,46 @@ services:
     depends_on:
       - prometheus
 
+  batch-trainer:
+    build:
+      context: .
+      dockerfile: docker/trainer.Dockerfile
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+      - REDIS_URL=redis://redis:6379
+      - MODEL_REGISTRY_PATH=/app/model_registry
+      - DATA_PATH=/app/data
+      - KAFKA_ENABLED=true
+      - TEAM_PREFIX=team1
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/model_registry:/app/model_registry
+      - ./data/snapshots:/app/data/snapshots
+    depends_on:
+      - kafka
+      - redis
+    restart: unless-stopped
+
+  stream-ingestor:
+    build:
+      context: .
+      dockerfile: docker/ingestor.Dockerfile
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+      - REDIS_URL=redis://redis:6379
+      - STORAGE_TYPE=local
+      - STORAGE_PREFIX=team1/events
+      - REDIS_ENABLED=true
+      - TEAM_PREFIX=team1
+    volumes:
+      - ./data/snapshots:/app/data/snapshots
+    depends_on:
+      - kafka
+      - redis
+    restart: unless-stopped
+
 volumes:
   redis_data:
   zookeeper_data:

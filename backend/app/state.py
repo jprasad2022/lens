@@ -29,6 +29,7 @@ class AppState:
         self.movie_metadata_service: Optional[Any] = None
         self.rating_statistics_service: Optional[Any] = None
         self.user_demographics_service: Optional[Any] = None
+        self.ab_switch_service: Optional[Any] = None
 
         # Background tasks
         self.consumer_task: Optional[asyncio.Task] = None
@@ -129,6 +130,13 @@ class AppState:
 
     async def get_current_model(self, user_id: Optional[int] = None) -> str:
         """Get current model based on A/B testing or default"""
+        # Use AB switch service if available
+        if self.ab_switch_service and user_id:
+            from services.ab_switch_service import get_ab_switch_service
+            ab_service = get_ab_switch_service()
+            return ab_service.get_model_for_user(user_id)
+        
+        # Fallback to simple A/B test assignment
         if self.ab_test_active and self.ab_test_models and user_id:
             # Simple A/B test assignment based on user ID
             model_index = user_id % len(self.ab_test_models)
