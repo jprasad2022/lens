@@ -89,47 +89,48 @@ jobs:
         GIT_SHA: ${{ github.sha }}
         TIMESTAMP: ${{ steps.snapshot.outputs.timestamp }}
       run: |
-        python -c "
-import json
-import os
-from datetime import datetime
-from pathlib import Path
-
-# Update metadata for all model types
-model_types = ['popularity', 'collaborative', 'als']
-registry_path = Path('model_registry')
-
-for model_type in model_types:
-    model_path = registry_path / model_type
-    if not model_path.exists():
-        continue
-    
-    # Find latest version
-    versions = [d for d in model_path.iterdir() if d.is_dir() and d.name != '__pycache__']
-    if not versions:
-        continue
-    
-    latest_version = sorted(versions, key=lambda x: x.name)[-1]
-    metadata_file = latest_version / 'metadata.json'
-    
-    if metadata_file.exists():
-        with open(metadata_file, 'r') as f:
-            metadata = json.load(f)
+        cat > update_metadata.py << 'EOF'
+        import json
+        import os
+        from datetime import datetime
+        from pathlib import Path
         
-        # Add provenance information
-        metadata['provenance'] = {
-            'data_snapshot_id': '$DATA_SNAPSHOT_ID',
-            'pipeline_git_sha': '$GIT_SHA',
-            'training_timestamp': '$TIMESTAMP',
-            'github_run_id': '${{ github.run_id }}',
-            'github_run_number': '${{ github.run_number }}'
-        }
+        # Update metadata for all model types
+        model_types = ['popularity', 'collaborative', 'als']
+        registry_path = Path('model_registry')
         
-        with open(metadata_file, 'w') as f:
-            json.dump(metadata, f, indent=2)
-        
-        print(f'Updated metadata for {model_type} version {latest_version.name}')
-"
+        for model_type in model_types:
+            model_path = registry_path / model_type
+            if not model_path.exists():
+                continue
+            
+            # Find latest version
+            versions = [d for d in model_path.iterdir() if d.is_dir() and d.name != '__pycache__']
+            if not versions:
+                continue
+            
+            latest_version = sorted(versions, key=lambda x: x.name)[-1]
+            metadata_file = latest_version / 'metadata.json'
+            
+            if metadata_file.exists():
+                with open(metadata_file, 'r') as f:
+                    metadata = json.load(f)
+                
+                # Add provenance information
+                metadata['provenance'] = {
+                    'data_snapshot_id': os.environ.get('DATA_SNAPSHOT_ID'),
+                    'pipeline_git_sha': os.environ.get('GIT_SHA'),
+                    'training_timestamp': os.environ.get('TIMESTAMP'),
+                    'github_run_id': os.environ.get('GITHUB_RUN_ID'),
+                    'github_run_number': os.environ.get('GITHUB_RUN_NUMBER')
+                }
+                
+                with open(metadata_file, 'w') as f:
+                    json.dump(metadata, f, indent=2)
+                
+                print(f'Updated metadata for {model_type} version {latest_version.name}')
+        EOF
+        python update_metadata.py
     
     - name: Commit model registry updates
       if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -157,27 +158,29 @@ for model_type in model_types:
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-key.json
           
           pip install google-cloud-storage
-          python -c "
-from google.cloud import storage
-from pathlib import Path
-import json
-
-client = storage.Client()
-bucket = client.bucket('$GCS_BUCKET')
-
-# Upload model files
-registry_path = Path('model_registry')
-for model_dir in registry_path.iterdir():
-    if model_dir.is_dir() and model_dir.name in ['popularity', 'collaborative', 'als']:
-        for version_dir in model_dir.iterdir():
-            if version_dir.is_dir():
-                for file in version_dir.iterdir():
-                    if file.is_file():
-                        blob_name = f'model_registry/{model_dir.name}/{version_dir.name}/{file.name}'
-                        blob = bucket.blob(blob_name)
-                        blob.upload_from_filename(str(file))
-                        print(f'Uploaded {blob_name}')
-"
+          cat > upload_to_gcs.py << 'EOF'
+          from google.cloud import storage
+          from pathlib import Path
+          import json
+          import os
+          
+          client = storage.Client()
+          bucket = client.bucket(os.environ.get('GCS_BUCKET'))
+          
+          # Upload model files
+          registry_path = Path('model_registry')
+          for model_dir in registry_path.iterdir():
+              if model_dir.is_dir() and model_dir.name in ['popularity', 'collaborative', 'als']:
+                  for version_dir in model_dir.iterdir():
+                      if version_dir.is_dir():
+                          for file in version_dir.iterdir():
+                              if file.is_file():
+                                  blob_name = f'model_registry/{model_dir.name}/{version_dir.name}/{file.name}'
+                                  blob = bucket.blob(blob_name)
+                                  blob.upload_from_filename(str(file))
+                                  print(f'Uploaded {blob_name}')
+          EOF
+          python upload_to_gcs.py
           rm -f /tmp/gcs-key.json
         fi
     
