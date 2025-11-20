@@ -30,6 +30,8 @@ from app.middleware import (
 
 # Get settings
 settings = get_settings()
+print(f"[MAIN DEBUG] settings.version = '{settings.version}' (type: {type(settings.version)})")
+print(f"[MAIN DEBUG] settings.app_name = '{settings.app_name}'")
 
 # Application state
 app_state = AppState()

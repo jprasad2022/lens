@@ -37,9 +37,19 @@ def calculate_availability_from_metrics():
     print("="*60)
     
     # Get current metrics from backend
-    response = requests.get(f"{BACKEND_URL}/metrics")
-    if response.status_code != 200:
-        print("ERROR: Cannot fetch metrics from backend")
+    try:
+        response = requests.get(f"{BACKEND_URL}/metrics", timeout=5)
+        if response.status_code != 200:
+            print(f"ERROR: Cannot fetch metrics from backend (status: {response.status_code})")
+            # Use demo data if backend is not available
+            print("\nUsing demo data for availability calculation...")
+            print("Rate limited - showing SLO target: 99.5%")
+            print("Typical availability metrics would show here")
+            return
+    except requests.exceptions.RequestException as e:
+        print(f"ERROR: Cannot connect to backend: {e}")
+        print("\nUsing demo data for availability calculation...")
+        demo_availability()
         return
     
     metrics_text = response.text
@@ -71,8 +81,8 @@ def calculate_availability_from_metrics():
     if total_requests > 0:
         availability = ((total_requests - error_requests) / total_requests) * 100
         print(f"  Availability: {availability:.2f}%")
-        print(f"  SLO Target: ≥70%")
-        print(f"  Status: {'✓ PASSED' if availability >= 70 else '✗ FAILED'}")
+        print(f"  SLO Target: >=70%")
+        print(f"  Status: {'PASSED' if availability >= 70 else 'FAILED'}")
     else:
         print("  No requests recorded yet")
         availability = 100.0

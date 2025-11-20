@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        print(f"[SETTINGS DEBUG] Version: '{self.version}' (type: {type(self.version)})")
         print(f"[CORS DEBUG] Loaded allowed_origins: {self.allowed_origins}")
         print(f"[CORS DEBUG] Type: {type(self.allowed_origins)}")
         for i, origin in enumerate(self.allowed_origins):

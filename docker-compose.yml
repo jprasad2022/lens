@@ -14,6 +14,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - MODEL_REGISTRY_PATH=/app/model_registry
       - DATA_PATH=/app/data
+      - VERSION=0.1.0
+      - RATE_LIMIT_ENABLED=false
     volumes:
       - ./backend/data:/app/data
       - ./backend/model_registry:/app/model_registry
