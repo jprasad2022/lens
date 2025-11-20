@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+      - SCHEMA_REGISTRY_URL=http://localhost:8081
+      - REDIS_URL=redis://redis:6379
+      - MODEL_REGISTRY_PATH=/app/model_registry
+      - DATA_PATH=/app/data
+      - ENABLE_METRICS=true
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/model_registry:/app/model_registry
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

@@ -64,6 +64,17 @@ class ModelInfo(BaseModel):
     metrics: Dict[str, float]
     parameters: Dict[str, Any]
     active: bool = True
+    data_snapshot_id: Optional[str] = None
+    pipeline_git_sha: Optional[str] = None
+
+class ProvenanceInfo(BaseModel):
+    """Full provenance tracking information"""
+    request_id: str
+    model_version: str
+    data_snapshot_id: Optional[str] = None
+    pipeline_git_sha: Optional[str] = None
+    container_image_digest: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 class RecommendationResponse(BaseModel):
     """Recommendation response"""
@@ -74,6 +85,7 @@ class RecommendationResponse(BaseModel):
     latency_ms: Optional[float] = None
     cached: bool = False
     request_id: Optional[str] = None
+    provenance: Optional[ProvenanceInfo] = None
 
 class HealthResponse(BaseModel):
     """Health check response"""

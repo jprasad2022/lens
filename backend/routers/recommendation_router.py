@@ -13,7 +13,8 @@ from models.schemas import (
     RecommendationRequest,
     RecommendationResponse,
     FeedbackRequest,
-    MovieInfo
+    MovieInfo,
+    ProvenanceInfo
 )
 from app.state import app_state
 from app.dependencies import get_current_user_optional
@@ -105,6 +106,19 @@ async def get_recommendations(
                 cached=result.get('cached', False)
             )
 
+        # Get container image digest from environment
+        import os
+        container_digest = os.environ.get('CONTAINER_DIGEST', 'local-dev')
+        
+        # Build provenance info
+        provenance = ProvenanceInfo(
+            request_id=request_id,
+            model_version=result['model_info']['version'],
+            data_snapshot_id=result['model_info'].get('data_snapshot_id'),
+            pipeline_git_sha=result['model_info'].get('pipeline_git_sha'),
+            container_image_digest=container_digest
+        )
+        
         # Build response
         response = RecommendationResponse(
             user_id=user_id,
@@ -113,7 +127,8 @@ async def get_recommendations(
             is_personalized=result.get('is_personalized', True),
             latency_ms=latency_ms,
             cached=result.get('cached', False),
-            request_id=request_id
+            request_id=request_id,
+            provenance=provenance
         )
 
         return response

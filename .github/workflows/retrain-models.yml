@@ -1,0 +1,218 @@
+name: Automated Model Retraining
+
+on:
+  # Run twice daily at 2 AM and 2 PM UTC
+  schedule:
+    - cron: '0 2,14 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      model_type:
+        description: 'Model type to retrain (popularity, collaborative, als, or all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - popularity
+          - collaborative
+          - als
+
+env:
+  PYTHON_VERSION: '3.11'
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'lens-project' }}
+  GCS_BUCKET: ${{ secrets.GCS_BUCKET || 'lens-models' }}
+
+jobs:
+  retrain-models:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Download latest data
+      working-directory: ./backend
+      run: |
+        python -m utils.download_data
+    
+    - name: Generate data snapshot ID
+      id: snapshot
+      run: |
+        SNAPSHOT_ID="snapshot-$(date +%Y%m%d-%H%M%S)"
+        echo "snapshot_id=$SNAPSHOT_ID" >> $GITHUB_OUTPUT
+        echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+    
+    - name: Retrain models
+      working-directory: ./backend
+      env:
+        MODEL_TYPE: ${{ github.event.inputs.model_type || 'all' }}
+        DATA_SNAPSHOT_ID: ${{ steps.snapshot.outputs.snapshot_id }}
+        GIT_SHA: ${{ github.sha }}
+      run: |
+        echo "Starting model retraining..."
+        echo "Model type: $MODEL_TYPE"
+        echo "Data snapshot: $DATA_SNAPSHOT_ID"
+        echo "Git SHA: $GIT_SHA"
+        
+        if [ "$MODEL_TYPE" = "all" ]; then
+          python scripts/train_all_models.py --snapshot-id $DATA_SNAPSHOT_ID
+        else
+          python scripts/train_all_models.py --model-type $MODEL_TYPE --snapshot-id $DATA_SNAPSHOT_ID
+        fi
+    
+    - name: Update model registry metadata
+      working-directory: ./backend
+      env:
+        DATA_SNAPSHOT_ID: ${{ steps.snapshot.outputs.snapshot_id }}
+        GIT_SHA: ${{ github.sha }}
+        TIMESTAMP: ${{ steps.snapshot.outputs.timestamp }}
+      run: |
+        python -c "
+import json
+import os
+from datetime import datetime
+from pathlib import Path
+
+# Update metadata for all model types
+model_types = ['popularity', 'collaborative', 'als']
+registry_path = Path('model_registry')
+
+for model_type in model_types:
+    model_path = registry_path / model_type
+    if not model_path.exists():
+        continue
+    
+    # Find latest version
+    versions = [d for d in model_path.iterdir() if d.is_dir() and d.name != '__pycache__']
+    if not versions:
+        continue
+    
+    latest_version = sorted(versions, key=lambda x: x.name)[-1]
+    metadata_file = latest_version / 'metadata.json'
+    
+    if metadata_file.exists():
+        with open(metadata_file, 'r') as f:
+            metadata = json.load(f)
+        
+        # Add provenance information
+        metadata['provenance'] = {
+            'data_snapshot_id': '$DATA_SNAPSHOT_ID',
+            'pipeline_git_sha': '$GIT_SHA',
+            'training_timestamp': '$TIMESTAMP',
+            'github_run_id': '${{ github.run_id }}',
+            'github_run_number': '${{ github.run_number }}'
+        }
+        
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        print(f'Updated metadata for {model_type} version {latest_version.name}')
+"
+    
+    - name: Commit model registry updates
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "GitHub Actions Bot"
+        
+        git add backend/model_registry/
+        git diff --staged --quiet || git commit -m "Update model registry - automated retraining
+
+        Data snapshot: ${{ steps.snapshot.outputs.snapshot_id }}
+        Timestamp: ${{ steps.snapshot.outputs.timestamp }}
+        Run ID: ${{ github.run_id }}"
+        
+        git push
+    
+    - name: Upload models to GCS (if configured)
+      if: env.GCS_BUCKET != 'lens-models'
+      working-directory: ./backend
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCS_SERVICE_KEY }}
+      run: |
+        if [ ! -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+          echo "$GOOGLE_APPLICATION_CREDENTIALS" > /tmp/gcs-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcs-key.json
+          
+          pip install google-cloud-storage
+          python -c "
+from google.cloud import storage
+from pathlib import Path
+import json
+
+client = storage.Client()
+bucket = client.bucket('$GCS_BUCKET')
+
+# Upload model files
+registry_path = Path('model_registry')
+for model_dir in registry_path.iterdir():
+    if model_dir.is_dir() and model_dir.name in ['popularity', 'collaborative', 'als']:
+        for version_dir in model_dir.iterdir():
+            if version_dir.is_dir():
+                for file in version_dir.iterdir():
+                    if file.is_file():
+                        blob_name = f'model_registry/{model_dir.name}/{version_dir.name}/{file.name}'
+                        blob = bucket.blob(blob_name)
+                        blob.upload_from_filename(str(file))
+                        print(f'Uploaded {blob_name}')
+"
+          rm -f /tmp/gcs-key.json
+        fi
+    
+    - name: Trigger model deployment
+      if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+      env:
+        BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://lens-backend.onrender.com' }}
+      run: |
+        # Notify backend about new models (optional)
+        curl -X POST "$BACKEND_URL/api/v1/models/reload" \
+          -H "Content-Type: application/json" \
+          -d '{"source": "github-action", "run_id": "${{ github.run_id }}"}' || true
+    
+    - name: Create retraining summary
+      if: always()
+      run: |
+        cat > retraining_summary.txt << EOF
+        Model Retraining Summary
+        ========================
+        Run ID: ${{ github.run_id }}
+        Run Number: ${{ github.run_number }}
+        Timestamp: ${{ steps.snapshot.outputs.timestamp }}
+        Data Snapshot: ${{ steps.snapshot.outputs.snapshot_id }}
+        Git SHA: ${{ github.sha }}
+        Model Type: ${{ github.event.inputs.model_type || 'all' }}
+        Status: ${{ job.status }}
+        EOF
+        
+        cat retraining_summary.txt
+    
+    - name: Upload artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: retraining-artifacts-${{ github.run_id }}
+        path: |
+          retraining_summary.txt
+          backend/model_registry/*/latest.txt

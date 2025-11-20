@@ -16,6 +16,9 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
 
+# Compile Python files for faster startup
+RUN python -m compileall /root/.local
+
 # Runtime stage
 FROM python:3.11-slim
 
@@ -46,6 +49,16 @@ USER appuser
 
 # Update PATH
 ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Add build arguments for container metadata
+ARG BUILD_DATE
+ARG GIT_SHA
+ARG VERSION
+
+# Set environment variables for provenance
+ENV BUILD_DATE=${BUILD_DATE} \
+    GIT_SHA=${GIT_SHA} \
+    VERSION=${VERSION}
 
 # Expose port
 EXPOSE 8000

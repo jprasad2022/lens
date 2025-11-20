@@ -1,0 +1,163 @@
+apiVersion: 1
+groups:
+  - name: lens-api-alerts
+    interval: 30s
+    rules:
+      - uid: high-error-rate
+        title: High Error Rate
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: math
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  type: query
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: API error rate is above 5%
+          description: "The error rate is {{ $values.B }}% which is above the threshold of 5%"
+          runbook_url: "https://github.com/lens-project/lens/wiki/runbooks/high-error-rate"
+        labels:
+          severity: warning
+          team: backend
+
+      - uid: high-latency
+        title: High API Latency
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (endpoint, le))
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: max
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: math
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  type: query
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: API p95 latency is above 1 second
+          description: "The p95 latency is {{ $values.B }}s which is above the threshold"
+          runbook_url: "https://github.com/lens-project/lens/wiki/runbooks/high-latency"
+        labels:
+          severity: warning
+          team: backend
+
+      - uid: low-availability
+        title: Low API Availability
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                (1 - (sum(increase(http_requests_total{status=~"5.."}[1h])) / sum(increase(http_requests_total[1h])))) * 100
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: B
+              refId: C
+              type: math
+              conditions:
+                - evaluator:
+                    params:
+                      - 70
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  type: query
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          summary: API availability is below 70%
+          description: "The availability is {{ $values.B }}% which is below the SLO of 70%"
+          runbook_url: "https://github.com/lens-project/lens/wiki/runbooks/low-availability"
+        labels:
+          severity: critical
+          team: backend
