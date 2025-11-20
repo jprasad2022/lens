@@ -48,7 +48,7 @@ jobs:
       id: backend-image
       run: |
         IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/backend:${{ github.sha }}"
-        docker build -t $IMAGE ./backend
+        docker build --build-arg VERSION=0.1.0 --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") --build-arg GIT_SHA=${{ github.sha }} -t $IMAGE ./backend
         docker push $IMAGE
         echo "image=$IMAGE" >> $GITHUB_OUTPUT
         echo "Backend image: $IMAGE" >> $GITHUB_STEP_SUMMARY
@@ -100,6 +100,7 @@ jobs:
           TEAM_PREFIX=team1
           MODEL_REGISTRY_PATH=/app/model_registry
           ENABLE_METRICS=true
+          VERSION=0.1.0
         flags: |
           --port=8000
           --cpu=2
