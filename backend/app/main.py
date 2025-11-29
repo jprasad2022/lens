@@ -89,16 +89,28 @@ async def lifespan(app: FastAPI):
         from services.ab_switch_service import get_ab_switch_service
         app_state.ab_switch_service = get_ab_switch_service()
 
-        # Initialize Kafka if enabled
-        if settings.kafka_bootstrap_servers != "localhost:9092":
-            print("Initializing Kafka service...")
-            app_state.kafka_service = get_kafka_service()
-            await app_state.kafka_service.initialize()
-
-            # Start Kafka consumer in background
-            app_state.consumer_task = asyncio.create_task(
-                start_consumer(app_state.kafka_service)
-            )
+        # Initialize Kafka if enabled (with error handling for Cloud Run)
+        if settings.kafka_bootstrap_servers != "localhost:9092" and settings.kafka_enabled:
+            try:
+                print("Initializing Kafka service...")
+                app_state.kafka_service = get_kafka_service()
+                # Add timeout for Kafka initialization
+                await asyncio.wait_for(
+                    app_state.kafka_service.initialize(),
+                    timeout=10.0  # 10 second timeout
+                )
+                
+                # Start Kafka consumer in background
+                app_state.consumer_task = asyncio.create_task(
+                    start_consumer(app_state.kafka_service)
+                )
+                print("Kafka service initialized successfully")
+            except asyncio.TimeoutError:
+                print("WARNING: Kafka initialization timed out - continuing without Kafka")
+                app_state.kafka_service = None
+            except Exception as e:
+                print(f"WARNING: Kafka initialization failed: {e} - continuing without Kafka")
+                app_state.kafka_service = None
 
         # Load default model
         print(f"Loading default model: {settings.default_model}")

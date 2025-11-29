@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     reload: bool = Field(default=False)
 
     # Kafka Configuration
+    kafka_enabled: bool = Field(default=False)  # Explicitly control Kafka
     kafka_bootstrap_servers: str = Field(default="localhost:9092")
     kafka_security_protocol: str = Field(default="PLAINTEXT")
     kafka_sasl_mechanism: Optional[str] = Field(default=None)
