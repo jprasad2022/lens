@@ -4,6 +4,7 @@ Following the pattern from insurance-rag-app
 """
 
 import asyncio
+import os
 import time
 from contextlib import asynccontextmanager
 from typing import Dict, Any
@@ -45,19 +46,22 @@ async def lifespan(app: FastAPI):
     # Initialize services
     print("Starting MovieLens Recommender API...")
 
-    # Download data from GCS if needed
-    try:
-        from utils.download_data import download_movielens_data
-        download_movielens_data()
-    except Exception as e:
-        print(f"Warning: Could not download data: {e}")
+    # Download data from GCS if needed (skip in Cloud Run or if explicitly disabled)
+    if not os.environ.get('K_SERVICE') and not os.environ.get('SKIP_STARTUP_DOWNLOADS'):
+        try:
+            from utils.download_data import download_movielens_data
+            download_movielens_data()
+        except Exception as e:
+            print(f"Warning: Could not download data: {e}")
 
-    # Download models from GCS if needed
-    try:
-        from utils.download_models import download_model_registry
-        download_model_registry()
-    except Exception as e:
-        print(f"Warning: Could not download models: {e}")
+        # Download models from GCS if needed
+        try:
+            from utils.download_models import download_model_registry
+            download_model_registry()
+        except Exception as e:
+            print(f"Warning: Could not download models: {e}")
+    else:
+        print("Skipping downloads during startup (Cloud Run or SKIP_STARTUP_DOWNLOADS set)")
 
     try:
         # Initialize model service
