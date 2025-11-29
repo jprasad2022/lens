@@ -58,7 +58,7 @@ if __name__ == "__main__":
             port=port,
             log_level="info",
             access_log=True,
-            reload=True  # Enable auto-reload for development
+            reload=False  # Disable auto-reload for production
         )
     except Exception as e:
         logger.error(f"Server failed to start: {e}", exc_info=True)

@@ -1,0 +1,139 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore, with the addition of
+# "#!include" directives (which insert the entries of the given .gitignore-style
+# file at that point).
+#
+# For more information, run:
+#   $ gcloud topic gcloudignore
+#
+.gcloudignore
+# If you would like to upload your .git directory, .gitignore file or files
+# from your .gitignore file, remove the corresponding line
+# below:
+.git
+.gitignore
+
+# Python pycache:
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test files
+tests/
+test_*.py
+*_test.py
+pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Documentation
+docs/
+README.md
+*.md
+
+# Notebooks and scripts
+notebooks/
+*.ipynb
+scripts/
+analysis_output/
+
+# Local development files
+.env
+.env.local
+.env.*.local
+*.log
+logs/
+*.sqlite
+*.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+tmp/
+temp/
+
+# Media files (if any)
+*.mp4
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Don't ignore requirements.txt - it's needed!
+!requirements.txt
+
+# Don't ignore Dockerfile - it's needed!
+!Dockerfile
+
+# Include the actual source code
+!app/
+!config/
+!services/
+!routers/
+!models/
+!utils/
+!pipeline/
+!quality/
+!recommender/
+!stream/
+!evaluation/
+!middleware/
+!run.py
+
+# Exclude large data files - they'll be downloaded at runtime
+data/*.dat
+data/*.csv
+data/*.parquet
+
+# Exclude model files - they'll be downloaded at runtime
+model_registry/*.pkl
+model_registry/*.joblib
+model_registry/*.h5
+model_registry/*.pt
+model_registry/*.pth
+model_registry/*.onnx
+model_registry/*.json
+
+# But keep the directory structure
+!data/.gitkeep
+!model_registry/.gitkeep

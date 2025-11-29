@@ -1,0 +1,43 @@
+{
+  "ratings_analysis": {
+    "total_movies": 3706,
+    "total_ratings": 1000209,
+    "total_users": 6040,
+    "gini_coefficient": 0.634,
+    "movies_with_100_or_less_ratings": 1700,
+    "percent_movies_with_100_or_less": 45.9,
+    "top_10_percent_coverage": 44.4,
+    "bottom_50_percent_coverage": 7.6,
+    "avg_ratings_per_movie": 269.9,
+    "avg_ratings_per_user": 165.6
+  },
+  "user_demographics": {
+    "total_users": 6040,
+    "gender_distribution": {
+      "male": 4331,
+      "female": 1709,
+      "male_percentage": 71.7,
+      "female_percentage": 28.3
+    },
+    "age_distribution": {
+      "<18": 222,
+      "55+": 380,
+      "25-34": 2096,
+      "45-54": 1046,
+      "35-44": 1193,
+      "18-24": 1103
+    },
+    "age_percentages": {
+      "<18": 3.7,
+      "55+": 6.3,
+      "25-34": 34.7,
+      "45-54": 17.3,
+      "35-44": 19.8,
+      "18-24": 18.3
+    }
+  },
+  "kafka_logs": {
+    "status": "no_logs",
+    "count": 0
+  }
+}
