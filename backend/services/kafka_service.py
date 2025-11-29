@@ -54,13 +54,16 @@ class KafkaServiceStub:
 
 def get_kafka_service():
     """Factory function to get appropriate Kafka service."""
+    # Check if Kafka is explicitly enabled
+    kafka_enabled = os.getenv("KAFKA_ENABLED", "false").lower() == "true"
+    
     # Check if Kafka is configured
-    if os.getenv("KAFKA_BOOTSTRAP_SERVERS") and os.getenv("KAFKA_BOOTSTRAP_SERVERS") != "localhost:9092":
+    if kafka_enabled and os.getenv("KAFKA_BOOTSTRAP_SERVERS") and os.getenv("KAFKA_BOOTSTRAP_SERVERS") != "localhost:9092":
         # Use real implementation
         from services.kafka_service_impl import KafkaServiceImpl
         return KafkaServiceImpl()
     else:
-        # Use stub for local development
+        # Use stub for local development or when Kafka is disabled
         return KafkaServiceStub()
 
 

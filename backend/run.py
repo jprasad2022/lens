@@ -40,8 +40,24 @@ for path in critical_paths:
 # Import app after environment logging
 try:
     logger.info("=== IMPORTING APPLICATION ===")
+    
+    # Test basic imports first
+    logger.info("Testing FastAPI import...")
+    import fastapi
+    logger.info("✓ FastAPI imported")
+    
+    logger.info("Testing uvicorn import...")
+    import uvicorn
+    logger.info("✓ Uvicorn imported")
+    
+    logger.info("Importing app.main...")
     from app.main import app
-    logger.info("Application imported successfully")
+    logger.info("✓ Application imported successfully")
+    
+except ImportError as e:
+    logger.error(f"Import error - missing dependency: {e}", exc_info=True)
+    logger.error("This usually means a required package is not installed")
+    sys.exit(1)
 except Exception as e:
     logger.error(f"Failed to import application: {e}", exc_info=True)
     sys.exit(1)

@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
         app_state.ab_switch_service = get_ab_switch_service()
 
         # Initialize Kafka if enabled (with error handling for Cloud Run)
-        if settings.kafka_bootstrap_servers != "localhost:9092" and settings.kafka_enabled:
+        if settings.kafka_enabled:
             try:
                 print("Initializing Kafka service...")
                 app_state.kafka_service = get_kafka_service()
@@ -244,6 +244,23 @@ async def debug_cors() -> Dict[str, Any]:
         "allowed_origins": settings.allowed_origins,
         "allowed_origins_type": str(type(settings.allowed_origins)),
         "allowed_origins_items": [str(origin) for origin in settings.allowed_origins] if settings.allowed_origins else []
+    }
+
+
+@app.get("/debug/services", include_in_schema=False)
+async def debug_services() -> Dict[str, Any]:
+    """Debug service initialization"""
+    return {
+        "kafka_enabled": settings.kafka_enabled,
+        "kafka_service_type": type(app_state.kafka_service).__name__ if app_state.kafka_service else "None",
+        "model_service": app_state.model_service is not None,
+        "redis_enabled": settings.redis_enabled,
+        "metrics_enabled": settings.enable_metrics,
+        "environment": {
+            "K_SERVICE": os.environ.get("K_SERVICE", "Not set"),
+            "KAFKA_ENABLED": os.environ.get("KAFKA_ENABLED", "Not set"),
+            "PORT": os.environ.get("PORT", "Not set")
+        }
     }
 
 

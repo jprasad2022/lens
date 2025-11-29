@@ -92,9 +92,12 @@ jobs:
         env_vars: |
           KAFKA_ENABLED=false
           MODEL_REGISTRY_PATH=/app/model_registry
-          ENABLE_METRICS=true
+          ENABLE_METRICS=false
           VERSION=0.1.0
           SKIP_STARTUP_DOWNLOADS=true
+          REDIS_ENABLED=false
+          DEBUG=false
+          PYTHONUNBUFFERED=1
         flags: |
           --port=8000
           --cpu=2
